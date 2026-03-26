@@ -8,6 +8,7 @@ import base64
 import subprocess, sys
 subprocess.run([sys.executable, "-m", "pip", "install", "scikit-learn"], check=True)
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
 
 BASE = Path(__file__).resolve().parent
 
