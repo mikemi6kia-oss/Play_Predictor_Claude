@@ -1,11 +1,12 @@
 import json
-import pickle
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 import base64
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
 
 BASE = Path(__file__).resolve().parent
 
@@ -48,8 +49,63 @@ def get_logo_path(team_code):
 
 @st.cache_resource
 def load_model():
-    with open(BASE / "cfl_play_predictor_model_v2.pkl", "rb") as f:
-        return pickle.load(f)
+    """Train the model from raw data at startup — no pkl, no version mismatch."""
+    data_path = BASE / "CFL_PLAY_BY_PLAY.xlsx"
+    df = pd.read_excel(data_path)
+    df = df[df["play_type"].isin(["Pass", "Run", "Sack"])].copy()
+    df["called_pass"] = np.where(df["play_type"].isin(["Pass", "Sack"]), 1, 0)
+
+    df["away_team"] = df["game"].str.extract(r"- (\w+) @")
+    df["home_team"] = df["game"].str.extract(r"@ (\w+)")
+    df["score_diff_offense"] = np.where(
+        df["possession_team"] == df["home_team"],
+        df["home_team_score"] - df["away_team_score"],
+        df["away_team_score"] - df["home_team_score"],
+    )
+
+    df["yards_to_go"]               = df["yards_to_go"].fillna(df["yards_to_go"].median())
+    df["yards_to_endzone"]          = df["yards_to_endzone"].fillna(df["yards_to_endzone"].median())
+    df["seconds_in_half_remaining"] = df["seconds_in_half_remaining"].fillna(df["seconds_in_half_remaining"].median())
+    df["defensive_team"]            = df["defensive_team"].fillna("UNK")
+    df["down_x_yards"]              = df["down"] * df["yards_to_go"]
+    df["is_2nd_short"]              = ((df["down"] == 2) & (df["yards_to_go"] <= 3)).astype(int)
+    df["garbage_time"]              = ((df["score_diff_offense"].abs() > 20) & (df["seconds_in_half_remaining"] < 600)).astype(int)
+    df["leading_late"]              = ((df["score_diff_offense"] > 7) & (df["seconds_in_half_remaining"] < 300)).astype(int)
+    df["two_min_trailing"]          = ((df["seconds_in_half_remaining"] <= 120) & (df["score_diff_offense"] < 0)).astype(int)
+
+    le_off = LabelEncoder()
+    le_def = LabelEncoder()
+    df["possession_team_enc"] = le_off.fit_transform(df["possession_team"])
+    df["defensive_team_enc"]  = le_def.fit_transform(df["defensive_team"])
+
+    features = [
+        "possession_team_enc", "defensive_team_enc",
+        "quarter", "down", "yards_to_go", "yards_to_endzone",
+        "seconds_in_half_remaining", "score_diff_offense",
+        "down_x_yards", "is_2nd_short", "garbage_time",
+        "leading_late", "two_min_trailing",
+    ]
+
+    df_clean = df.dropna(subset=features + ["called_pass"])
+    X = df_clean[features]
+    y = df_clean["called_pass"]
+
+    model = HistGradientBoostingClassifier(
+        max_iter=500, max_depth=6, learning_rate=0.04,
+        min_samples_leaf=12, l2_regularization=0.5,
+        class_weight="balanced", random_state=42,
+        early_stopping=True, validation_fraction=0.1, n_iter_no_change=25,
+    )
+    model.fit(X, y)
+
+    return {
+        "model":         model,
+        "le_offense":    le_off,
+        "le_defense":    le_def,
+        "features":      features,
+        "offense_teams": le_off.classes_.tolist(),
+        "defense_teams": le_def.classes_.tolist(),
+    }
 
 @st.cache_data
 def load_team_lookup():
