@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 BASE = Path(__file__).resolve().parent
 
 st.set_page_config(
-    page_title="CFL Scout",
+    page_title="CFL Play Predictor",
     page_icon="🏈",
     layout="wide",
     initial_sidebar_state="expanded"
