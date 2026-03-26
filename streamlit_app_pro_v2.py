@@ -51,7 +51,7 @@ def get_logo_path(team_code):
 @st.cache_resource
 def load_model():
     """Train the model from raw data at startup — no pkl, no version mismatch."""
-    data_path = BASE / "CFL_PLAY_BY_PLAY.xlsx"
+    data_path = BASE / "CFL PLAY BY PLAY.xlsx"
     df = pd.read_excel(data_path)
     df = df[df["play_type"].isin(["Pass", "Run", "Sack"])].copy()
     df["called_pass"] = np.where(df["play_type"].isin(["Pass", "Sack"]), 1, 0)
