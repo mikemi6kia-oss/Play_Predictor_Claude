@@ -149,7 +149,9 @@ def compute_tendencies(_team_lookup):
                                             continue
                                         lk = sub.sort_values("plays", ascending=False).iloc[0]
                                         delta = float(lk["pass_prob_delta_vs_league"])
-                                       if abs(delta) >= 0.10 and int(lk["plays"]) >= 5 and int(lk["league_plays"]) >= 10:
+                                        plays = int(lk["plays"])
+                                        league_plays = int(lk["league_plays"])
+                                        if abs(delta) >= 0.10 and plays >= 5 and league_plays >= 10:
                                             rows.append({
                                                 "team": team,
                                                 "quarter": q,
@@ -165,8 +167,8 @@ def compute_tendencies(_team_lookup):
                                                 "team_hist_pass_rate": float(lk["pass_prob_hist"]),
                                                 "league_pass_rate": float(lk["league_pass_prob_hist"]),
                                                 "tendency": "Pass-heavy" if delta > 0 else "Run-heavy",
-                                                "team_plays": int(lk["plays"]),
-                                                "league_plays": int(lk["league_plays"]),
+                                                "team_plays": plays,
+                                                "league_plays": league_plays,
                                             })
                                     except Exception:
                                         continue
