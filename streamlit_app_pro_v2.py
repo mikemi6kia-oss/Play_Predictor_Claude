@@ -455,7 +455,7 @@ st.markdown(f"""
       <strong>0.7</strong> = decent<br>
       <strong>0.8</strong> = strong &#10003;<br>
       <strong>0.9+</strong> = exceptional<br><br>
-      This model: <strong>{auc:.3f}</strong> &mdash; if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc:.0%} of the time.
+      This model: <strong>{auc_str}</strong> &mdash; if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc_pct} of the time.
     </div>
   </div>
   <div class="prob-card prob-card-stat">
