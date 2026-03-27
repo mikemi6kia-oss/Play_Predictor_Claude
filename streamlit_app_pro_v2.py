@@ -400,7 +400,7 @@ st.markdown(f"""
       {logo_html}
       <div>
         <div class="team-badge-name">{TEAM_NAMES.get(team, team)}</div>
-        <div class="team-badge-label">Offense · vs {def_team}</div>
+                  <div class="team-badge-label">Offense &middot; vs {def_team}</div>
       </div>
     </div>
   </div>
