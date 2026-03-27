@@ -233,7 +233,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 .live-bar {{ background: #0d1117; border-bottom: 1px solid #1e2433; padding: 10px 28px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }}
 .live-tag {{ background: {pri}; color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; padding: 3px 8px; border-radius: 3px; }}
 .live-item {{ display: flex; flex-direction: column; gap: 1px; }}
-.live-label {{ font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #4a5568; line-height: 1; }}
+.live-label {{ font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; line-height: 1; }}
 .live-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; color: #e8eaf0; line-height: 1; }}
 .live-sep {{ width: 1px; height: 28px; background: #1e2433; }}
 
@@ -242,7 +242,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 .prob-card-pass {{ background: {pri}20; border: 1.5px solid {pri}66; }}
 .prob-card-run {{ background: #1a2235; border: 1.5px solid #2a3448; }}
 .prob-card-stat {{ background: #0d1117; border: 1.5px solid #1e2433; flex: 0.6; }}
-.prob-card-label {{ font-size: 0.68rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #6b7280; line-height: 1; }}
+.prob-card-label {{ font-size: 0.68rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #94a3b8; line-height: 1; }}
 .prob-card-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 3.2rem; font-weight: 800; line-height: 1; }}
 .prob-card-pass .prob-card-value {{ color: {pri}; }}
 .prob-card-run .prob-card-value {{ color: #94a3b8; }}
@@ -254,7 +254,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 
 .comp-row {{ display: flex; gap: 12px; margin-top: 12px; }}
 .comp-stat {{ flex: 1; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 12px 14px; }}
-.comp-stat-label {{ font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #4a5568; margin-bottom: 4px; }}
+.comp-stat-label {{ font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; }}
 .comp-stat-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 700; color: #e2e8f0; line-height: 1; }}
 .comp-stat-value.positive {{ color: #22c55e; }}
 .comp-stat-value.negative {{ color: #ef4444; }}
@@ -263,7 +263,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 .alert-box {{ border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.85rem; line-height: 1.4; }}
 .alert-pass    {{ background: {pri}15; border-left: 3px solid {pri}; color: #cbd5e1; }}
 .alert-run     {{ background: #ef444415; border-left: 3px solid #ef4444; color: #cbd5e1; }}
-.alert-neutral {{ background: #111827; border-left: 3px solid #374151; color: #6b7280; }}
+.alert-neutral {{ background: #111827; border-left: 3px solid #374151; color: #94a3b8; }}
 
 section[data-testid="stSidebar"] {{ background: #0d1117 !important; border-right: 1px solid #1e2433 !important; }}
 section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{ color: #94a3b8 !important; font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; }}
@@ -271,7 +271,7 @@ section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="
 .sidebar-heading {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: {pri}; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid {pri}33; }}
 
 .stTabs [data-baseweb="tab-list"] {{ background: #0d1117 !important; border-bottom: 1px solid #1e2433 !important; padding: 0 28px !important; gap: 0 !important; }}
-.stTabs [data-baseweb="tab"] {{ font-family: 'Barlow Condensed', sans-serif !important; font-size: 0.8rem !important; font-weight: 700 !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; color: #4a5568 !important; padding: 12px 20px !important; background: transparent !important; }}
+.stTabs [data-baseweb="tab"] {{ font-family: 'Barlow Condensed', sans-serif !important; font-size: 0.8rem !important; font-weight: 700 !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; color: #94a3b8 !important; padding: 12px 20px !important; background: transparent !important; }}
 .stTabs [aria-selected="true"] {{ color: {pri} !important; border-bottom: 2px solid {pri} !important; }}
 .stTabs [data-baseweb="tab-panel"] {{ background: #0a0e1a !important; padding: 22px 28px !important; }}
 
@@ -420,7 +420,7 @@ with left:
   <div class="comp-stat"><div class="comp-stat-label">League avg</div><div class="comp-stat-value">{league_avg:.1%}</div></div>
   <div class="comp-stat"><div class="comp-stat-label">Team vs league</div><div class="comp-stat-value {delta_cls}">{delta_sign} {abs(delta):.1%}</div></div>
 </div>
-<div style="margin-top:8px;font-size:0.75rem;color:#4a5568;">{n_plays} team plays · {n_league} league plays in this bucket</div>
+<div style="margin-top:8px;font-size:0.75rem;color:#94a3b8;">{n_plays} team plays · {n_league} league plays in this bucket</div>
 """, unsafe_allow_html=True)
         if delta >= 0.20:
             st.markdown(f'<div class="alert-box alert-pass"><strong>Pass-heavy tendency.</strong> {team} passes {delta:+.1%} above league average here.</div>', unsafe_allow_html=True)
