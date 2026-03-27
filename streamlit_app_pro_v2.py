@@ -182,7 +182,7 @@ FEATURES    = MODEL_PKG["features"]
 TEAM_LOOKUP = load_team_lookup()
 COMPS       = load_comparables()
 METRICS     = load_metrics()
-TENDENCIES  = load_tendencies()
+TENDENCIES  = compute_tendencies(TEAM_LOOKUP)
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
 
 
