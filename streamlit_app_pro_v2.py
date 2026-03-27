@@ -593,7 +593,7 @@ with tab1:
                           </div>
                         </div>"""
 
-                st.markdown(f"""
+                st.markdown("""
 <style>
 .tend-card {{
     background: #0d1117;
