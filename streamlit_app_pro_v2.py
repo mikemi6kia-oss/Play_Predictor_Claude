@@ -525,7 +525,7 @@ with right:
 
         st.markdown(f"""
 <style>
-.play-feed {{ display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }}
+.play-feed { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 .play-row {{ display: flex; align-items: flex-start; gap: 12px; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 10px 14px; transition: border-color 0.15s; }}
 .play-row:hover {{ border-color: {pri}44; }}
 .play-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; border: 1px solid; border-radius: 4px; padding: 3px 8px; min-width: 48px; text-align: center; margin-top: 2px; flex-shrink: 0; }}
