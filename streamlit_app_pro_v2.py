@@ -1,4 +1,5 @@
 import json
+import base64
 from pathlib import Path
 
 import numpy as np
@@ -28,11 +29,11 @@ TEAM_COLORS = {
     "WPG": {"primary": "#003087", "secondary": "#7BAFD4"},
 }
 TEAM_NAMES = {
-    "BC":  "BC Lions",          "CGY": "Calgary Stampeders",
-    "EDM": "Edmonton Elks",     "HAM": "Hamilton Tiger-Cats",
-    "MTL": "Montreal Alouettes","OTT": "Ottawa REDBLACKS",
+    "BC":  "BC Lions",           "CGY": "Calgary Stampeders",
+    "EDM": "Edmonton Elks",      "HAM": "Hamilton Tiger-Cats",
+    "MTL": "Montreal Alouettes", "OTT": "Ottawa REDBLACKS",
     "SSK": "Saskatchewan Roughriders",
-    "TOR": "Toronto Argonauts", "WPG": "Winnipeg Blue Bombers",
+    "TOR": "Toronto Argonauts",  "WPG": "Winnipeg Blue Bombers",
 }
 TEAM_LOGOS = {
     "BC":  "assets/logos/BC.png",  "CGY": "assets/logos/cal.png",
@@ -87,9 +88,11 @@ def load_model():
         early_stopping=True, validation_fraction=0.1, n_iter_no_change=25,
     )
     model.fit(df_clean[features], df_clean["called_pass"])
-    return {"model": model, "le_offense": le_off, "le_defense": le_def,
-            "features": features, "offense_teams": le_off.classes_.tolist(),
-            "defense_teams": le_def.classes_.tolist()}
+    return {
+        "model": model, "le_offense": le_off, "le_defense": le_def,
+        "features": features, "offense_teams": le_off.classes_.tolist(),
+        "defense_teams": le_def.classes_.tolist(),
+    }
 
 @st.cache_data
 def load_team_lookup():
@@ -119,6 +122,7 @@ COMPS       = load_comparables()
 METRICS     = load_metrics()
 TENDENCIES  = load_tendencies()
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
+
 
 def distance_bucket(x):
     return "Short (1-3)" if x <= 3 else ("Medium (4-7)" if x <= 7 else "Long (8+)")
@@ -155,17 +159,19 @@ def build_row(team, def_team, quarter, mins, secs, down, ytg, side, ball_on, sco
     yte = yte_calc(side, ball_on)
     sec = half_seconds(quarter, mins, secs)
     row = {
-        "possession_team_enc": encode_team(LE_OFF, team),
-        "defensive_team_enc":  encode_team(LE_DEF, def_team),
-        "quarter": quarter, "down": down,
-        "yards_to_go": ytg, "yards_to_endzone": yte,
+        "possession_team_enc":       encode_team(LE_OFF, team),
+        "defensive_team_enc":        encode_team(LE_DEF, def_team),
+        "quarter":                   quarter,
+        "down":                      down,
+        "yards_to_go":               ytg,
+        "yards_to_endzone":          yte,
         "seconds_in_half_remaining": sec,
-        "score_diff_offense": score_diff,
-        "down_x_yards": down * ytg,
-        "is_2nd_short": int(down == 2 and ytg <= 3),
-        "garbage_time": int(abs(score_diff) > 20 and sec < 600),
-        "leading_late": int(score_diff > 7 and sec < 300),
-        "two_min_trailing": int(sec <= 120 and score_diff < 0),
+        "score_diff_offense":        score_diff,
+        "down_x_yards":              down * ytg,
+        "is_2nd_short":              int(down == 2 and ytg <= 3),
+        "garbage_time":              int(abs(score_diff) > 20 and sec < 600),
+        "leading_late":              int(score_diff > 7 and sec < 300),
+        "two_min_trailing":          int(sec <= 120 and score_diff < 0),
     }
     return pd.DataFrame([row])[FEATURES], yte, sec
 
@@ -182,7 +188,8 @@ def get_bucket(team, down, ytg, yte, score_diff, sec):
 
 def get_comparables(team, quarter, down, ytg, yte, sec, score_diff, n=10):
     d = COMPS[(COMPS["possession_team"] == team) & (COMPS["down"] == down)].copy()
-    if d.empty: return d
+    if d.empty:
+        return d
     d["dist"] = (
         ((d["quarter"] - quarter) / 2.0) ** 2 +
         ((d["yards_to_go"] - ytg) / 4.0) ** 2 +
@@ -195,7 +202,8 @@ def get_comparables(team, quarter, down, ytg, yte, sec, score_diff, n=10):
     return d[["Play", "play_result", "description", "cfl_game_id", "quarter",
               "yards_to_go", "score_diff_offense"]]
 
-# ── DESIGN SYSTEM ─────────────────────────────────────────────────────────────
+
+# ── SESSION DEFAULTS ──────────────────────────────────────────────────────────
 for k, v in dict(team="WPG", def_team="MTL", quarter=1, minutes=4, seconds=0,
                  down=1, ytg=10.0, field_side="Own", ball_on=30.0, score_diff=-10).items():
     st.session_state.setdefault(k, v)
@@ -203,416 +211,98 @@ for k, v in dict(team="WPG", def_team="MTL", quarter=1, minutes=4, seconds=0,
 team   = st.session_state["team"]
 colors = TEAM_COLORS.get(team, {"primary": "#1a1a2e", "secondary": "#e94560"})
 pri    = colors["primary"]
-sec    = colors["secondary"]
 
+# ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
 
 *, *::before, *::after {{ box-sizing: border-box; }}
+html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !important; font-family: 'Barlow', sans-serif !important; }}
+.block-container {{ padding: 0 !important; max-width: 100% !important; }}
 
-html, body, .stApp {{
-    background-color: #0a0e1a !important;
-    color: #e8eaf0 !important;
-    font-family: 'Barlow', sans-serif !important;
-}}
+.scout-header {{ background: linear-gradient(135deg, #0d1117 0%, #0a0e1a 60%, {pri}22 100%); border-bottom: 2px solid {pri}; padding: 0; display: flex; align-items: stretch; min-height: 72px; }}
+.scout-header-left {{ padding: 14px 28px; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid #1e2433; min-width: 300px; }}
+.scout-wordmark {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: {pri}; line-height: 1; margin-bottom: 3px; }}
+.scout-title {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.75rem; font-weight: 800; color: #ffffff; line-height: 1; letter-spacing: 0.02em; }}
+.scout-header-right {{ flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 14px 28px; gap: 20px; }}
+.team-badge {{ display: flex; align-items: center; gap: 12px; background: {pri}18; border: 1px solid {pri}44; border-radius: 8px; padding: 8px 16px; }}
+.team-badge-name {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: #ffffff; line-height: 1; }}
+.team-badge-label {{ font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: {pri}; line-height: 1; margin-top: 3px; }}
 
-.block-container {{
-    padding: 0 !important;
-    max-width: 100% !important;
-}}
+.live-bar {{ background: #0d1117; border-bottom: 1px solid #1e2433; padding: 10px 28px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }}
+.live-tag {{ background: {pri}; color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; padding: 3px 8px; border-radius: 3px; }}
+.live-item {{ display: flex; flex-direction: column; gap: 1px; }}
+.live-label {{ font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #4a5568; line-height: 1; }}
+.live-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; color: #e8eaf0; line-height: 1; }}
+.live-sep {{ width: 1px; height: 28px; background: #1e2433; }}
 
-/* ── HEADER ── */
-.scout-header {{
-    background: linear-gradient(135deg, #0d1117 0%, #0a0e1a 60%, {pri}22 100%);
-    border-bottom: 2px solid {pri};
-    padding: 0;
-    display: flex;
-    align-items: stretch;
-    min-height: 72px;
-    margin-bottom: 0;
-}}
-.scout-header-left {{
-    padding: 14px 28px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-right: 1px solid #1e2433;
-    min-width: 300px;
-}}
-.scout-wordmark {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: {pri};
-    line-height: 1;
-    margin-bottom: 3px;
-}}
-.scout-title {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #ffffff;
-    line-height: 1;
-    letter-spacing: 0.02em;
-}}
-.scout-header-right {{
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 14px 28px;
-    gap: 20px;
-}}
-.team-badge {{
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: {pri}18;
-    border: 1px solid {pri}44;
-    border-radius: 8px;
-    padding: 8px 16px;
-}}
-.team-badge-name {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1;
-}}
-.team-badge-label {{
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: {pri};
-    line-height: 1;
-    margin-top: 3px;
-}}
-
-/* ── LIVE BAR ── */
-.live-bar {{
-    background: #0d1117;
-    border-bottom: 1px solid #1e2433;
-    padding: 10px 28px;
-    display: flex;
-    align-items: center;
-    gap: 28px;
-    flex-wrap: wrap;
-}}
-.live-tag {{
-    background: {pri};
-    color: white;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 3px 8px;
-    border-radius: 3px;
-}}
-.live-item {{
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-}}
-.live-label {{
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #4a5568;
-    line-height: 1;
-}}
-.live-value {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #e8eaf0;
-    line-height: 1;
-}}
-.live-sep {{
-    width: 1px;
-    height: 28px;
-    background: #1e2433;
-}}
-
-/* ── PROBABILITY HERO ── */
-.prob-hero {{
-    background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
-    border-bottom: 1px solid #1e2433;
-    padding: 24px 28px;
-    display: flex;
-    gap: 16px;
-    align-items: stretch;
-}}
-.prob-card {{
-    flex: 1;
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: relative;
-    overflow: hidden;
-}}
-.prob-card-pass {{
-    background: {pri}20;
-    border: 1.5px solid {pri}66;
-}}
-.prob-card-run {{
-    background: #1a2235;
-    border: 1.5px solid #2a3448;
-}}
-.prob-card-stat {{
-    background: #0d1117;
-    border: 1.5px solid #1e2433;
-    flex: 0.6;
-}}
-.prob-card-label {{
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #6b7280;
-    line-height: 1;
-}}
-.prob-card-value {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 3.2rem;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.01em;
-}}
+.prob-hero {{ background: linear-gradient(135deg, #0d1117 0%, #111827 100%); border-bottom: 1px solid #1e2433; padding: 24px 28px; display: flex; gap: 16px; align-items: stretch; }}
+.prob-card {{ flex: 1; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }}
+.prob-card-pass {{ background: {pri}20; border: 1.5px solid {pri}66; }}
+.prob-card-run {{ background: #1a2235; border: 1.5px solid #2a3448; }}
+.prob-card-stat {{ background: #0d1117; border: 1.5px solid #1e2433; flex: 0.6; }}
+.prob-card-label {{ font-size: 0.68rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #6b7280; line-height: 1; }}
+.prob-card-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 3.2rem; font-weight: 800; line-height: 1; }}
 .prob-card-pass .prob-card-value {{ color: {pri}; }}
 .prob-card-run .prob-card-value {{ color: #94a3b8; }}
-.prob-card-stat .prob-card-value {{
-    font-size: 2rem;
-    color: #e8eaf0;
-}}
-.prob-bar-track {{
-    height: 4px;
-    background: #1e2433;
-    border-radius: 2px;
-    margin-top: 8px;
-    overflow: hidden;
-}}
-.prob-bar-fill {{
-    height: 100%;
-    background: {pri};
-    border-radius: 2px;
-    transition: width 0.4s ease;
-}}
+.prob-card-stat .prob-card-value {{ font-size: 2rem; color: #e8eaf0; }}
+.prob-bar-track {{ height: 4px; background: #1e2433; border-radius: 2px; margin-top: 8px; overflow: hidden; }}
+.prob-bar-fill {{ height: 100%; border-radius: 2px; }}
 
-/* ── SECTION TITLES ── */
-.section-title {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: {pri};
-    margin: 0 0 12px 0;
-    padding-bottom: 6px;
-    border-bottom: 1px solid {pri}33;
-}}
+.section-title {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: {pri}; margin: 0 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid {pri}33; }}
 
-/* ── CONTENT GRID ── */
-.content-grid {{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: #1e2433;
-    border-top: 1px solid #1e2433;
-}}
-.content-panel {{
-    background: #0a0e1a;
-    padding: 22px 28px;
-}}
-
-/* ── SNAPSHOT TAGS ── */
-.snap-grid {{
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 0;
-}}
-.snap-tag {{
-    background: #111827;
-    border: 1px solid #1e2433;
-    border-radius: 6px;
-    padding: 8px 12px;
-    flex: 1;
-    min-width: 80px;
-}}
-.snap-tag-label {{
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #4a5568;
-    margin-bottom: 4px;
-}}
-.snap-tag-value {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #e2e8f0;
-}}
-
-/* ── COMPARISON ROW ── */
-.comp-row {{
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
-}}
-.comp-stat {{
-    flex: 1;
-    background: #0d1117;
-    border: 1px solid #1e2433;
-    border-radius: 8px;
-    padding: 12px 14px;
-}}
-.comp-stat-label {{
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #4a5568;
-    margin-bottom: 4px;
-}}
-.comp-stat-value {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    line-height: 1;
-}}
+.comp-row {{ display: flex; gap: 12px; margin-top: 12px; }}
+.comp-stat {{ flex: 1; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 12px 14px; }}
+.comp-stat-label {{ font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #4a5568; margin-bottom: 4px; }}
+.comp-stat-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 700; color: #e2e8f0; line-height: 1; }}
 .comp-stat-value.positive {{ color: #22c55e; }}
 .comp-stat-value.negative {{ color: #ef4444; }}
 .comp-stat-value.neutral  {{ color: {pri}; }}
 
-/* ── ALERT ── */
-.alert-box {{
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-top: 12px;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 0.85rem;
-    line-height: 1.4;
-}}
-.alert-pass  {{ background: {pri}15; border-left: 3px solid {pri}; color: #cbd5e1; }}
-.alert-run   {{ background: #ef444415; border-left: 3px solid #ef4444; color: #cbd5e1; }}
+.alert-box {{ border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.85rem; line-height: 1.4; }}
+.alert-pass    {{ background: {pri}15; border-left: 3px solid {pri}; color: #cbd5e1; }}
+.alert-run     {{ background: #ef444415; border-left: 3px solid #ef4444; color: #cbd5e1; }}
 .alert-neutral {{ background: #111827; border-left: 3px solid #374151; color: #6b7280; }}
 
-/* ── SIDEBAR ── */
-section[data-testid="stSidebar"] {{
-    background: #0d1117 !important;
-    border-right: 1px solid #1e2433 !important;
-}}
-section[data-testid="stSidebar"] .stSelectbox label,
-section[data-testid="stSidebar"] .stNumberInput label,
-section[data-testid="stSidebar"] .stSlider label,
-section[data-testid="stSidebar"] p {{
-    color: #94a3b8 !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
-}}
-section[data-testid="stSidebar"] .stSelectbox > div > div,
-section[data-testid="stSidebar"] .stNumberInput input {{
-    background: #111827 !important;
-    border: 1px solid #1e2433 !important;
-    color: #e2e8f0 !important;
-    border-radius: 6px !important;
-}}
-.sidebar-heading {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: {pri};
-    margin: 16px 0 8px 0;
-    padding-bottom: 4px;
-    border-bottom: 1px solid {pri}33;
-}}
+section[data-testid="stSidebar"] {{ background: #0d1117 !important; border-right: 1px solid #1e2433 !important; }}
+section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{ color: #94a3b8 !important; font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; }}
+section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="stSidebar"] input {{ background: #111827 !important; border: 1px solid #1e2433 !important; color: #e2e8f0 !important; border-radius: 6px !important; }}
+.sidebar-heading {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: {pri}; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid {pri}33; }}
 
-/* ── DATAFRAME ── */
-.stDataFrame {{
-    border: 1px solid #1e2433 !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-}}
+.stTabs [data-baseweb="tab-list"] {{ background: #0d1117 !important; border-bottom: 1px solid #1e2433 !important; padding: 0 28px !important; gap: 0 !important; }}
+.stTabs [data-baseweb="tab"] {{ font-family: 'Barlow Condensed', sans-serif !important; font-size: 0.8rem !important; font-weight: 700 !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; color: #4a5568 !important; padding: 12px 20px !important; background: transparent !important; }}
+.stTabs [aria-selected="true"] {{ color: {pri} !important; border-bottom: 2px solid {pri} !important; }}
+.stTabs [data-baseweb="tab-panel"] {{ background: #0a0e1a !important; padding: 22px 28px !important; }}
 
-/* ── TABS ── */
-.stTabs [data-baseweb="tab-list"] {{
-    background: #0d1117 !important;
-    border-bottom: 1px solid #1e2433 !important;
-    padding: 0 28px !important;
-    gap: 0 !important;
-}}
-.stTabs [data-baseweb="tab"] {{
-    font-family: 'Barlow Condensed', sans-serif !important;
-    font-size: 0.8rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.12em !important;
-    text-transform: uppercase !important;
-    color: #4a5568 !important;
-    padding: 12px 20px !important;
-    border-bottom: 2px solid transparent !important;
-    background: transparent !important;
-}}
-.stTabs [aria-selected="true"] {{
-    color: {pri} !important;
-    border-bottom-color: {pri} !important;
-}}
-.stTabs [data-baseweb="tab-panel"] {{
-    background: #0a0e1a !important;
-    padding: 22px 28px !important;
-}}
-
-/* Hide default streamlit chrome */
 #MainMenu, footer, header {{ visibility: hidden; }}
 .stDeployButton {{ display: none; }}
 div[data-testid="stToolbar"] {{ display: none; }}
 </style>
 """, unsafe_allow_html=True)
 
-# ── SIDEBAR ──────────────────────────────────────────────────────────────────
+# ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f'<div class="sidebar-heading">Offense</div>', unsafe_allow_html=True)
     st.selectbox("Team", TEAMS, key="team", label_visibility="collapsed")
     st.markdown(f'<div class="sidebar-heading">Defense</div>', unsafe_allow_html=True)
     st.selectbox("Defense", TEAMS, key="def_team", label_visibility="collapsed")
-
-    st.markdown(f'<div class="sidebar-heading">Game Clock</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-heading">Game Clock</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
-    with c1:
-        st.selectbox("Qtr", [1,2,3,4], key="quarter")
-    with c2:
-        st.selectbox("Down", [1,2,3], key="down")
+    with c1: st.selectbox("Qtr", [1,2,3,4], key="quarter")
+    with c2: st.selectbox("Down", [1,2,3], key="down")
     c3, c4 = st.columns(2)
-    with c3:
-        st.number_input("Min", 0, 15, step=1, key="minutes")
-    with c4:
-        st.number_input("Sec", 0, 59, step=1, key="seconds")
-
-    st.markdown(f'<div class="sidebar-heading">Field Position</div>', unsafe_allow_html=True)
+    with c3: st.number_input("Min", 0, 15, step=1, key="minutes")
+    with c4: st.number_input("Sec", 0, 59, step=1, key="seconds")
+    st.markdown('<div class="sidebar-heading">Field Position</div>', unsafe_allow_html=True)
     st.selectbox("Side", ["Own", "Opp"], key="field_side")
     st.number_input("Yard line", 1.0, 55.0, step=1.0, key="ball_on")
     st.number_input("Yards to go", 0.0, 50.0, step=1.0, key="ytg")
-
-    st.markdown(f'<div class="sidebar-heading">Score</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-heading">Score</div>', unsafe_allow_html=True)
     st.number_input("Score diff (offense)", -60, 60, step=1, key="score_diff")
     st.caption("Negative = trailing")
-
     if st.session_state["down"] == 3:
-        st.warning("⚠️ 3rd down is typically a kicking situation in the CFL.")
+        st.warning("3rd down is typically a kicking situation in the CFL.")
 
 # ── READ INPUTS ───────────────────────────────────────────────────────────────
 team       = st.session_state["team"]
@@ -636,7 +326,6 @@ logo_path = get_logo_path(team)
 # ── HEADER ────────────────────────────────────────────────────────────────────
 logo_html = ""
 if logo_path:
-    import base64
     with open(str(logo_path), "rb") as f:
         b64 = base64.b64encode(f.read()).decode()
     logo_html = '<img src="data:image/png;base64,' + b64 + '" height="42" style="opacity:0.95">'
@@ -659,8 +348,8 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── LIVE SITUATION BAR ─────────────────────────────────────────────────────────
-down_str = {1:"1st",2:"2nd",3:"3rd"}.get(down, f"{down}th")
+# ── LIVE BAR ──────────────────────────────────────────────────────────────────
+down_str = {1: "1st", 2: "2nd", 3: "3rd"}.get(down, f"{down}th")
 st.markdown(f"""
 <div class="live-bar">
   <span class="live-tag">LIVE</span>
@@ -680,21 +369,21 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── PROBABILITY HERO ───────────────────────────────────────────────────────────
-acc  = METRICS.get("accuracy_at_0_5_threshold", 0)
-auc  = METRICS.get("roc_auc", 0)
-n    = int(lookup["plays"]) if lookup else 0
+# ── PROBABILITY HERO ──────────────────────────────────────────────────────────
+acc = METRICS.get("accuracy_at_0_5_threshold", 0)
+auc = METRICS.get("roc_auc", 0)
+n   = int(lookup["plays"]) if lookup else 0
 st.markdown(f"""
 <div class="prob-hero">
   <div class="prob-card prob-card-pass">
     <div class="prob-card-label">Pass probability</div>
     <div class="prob-card-value">{pass_prob:.1%}</div>
-    <div class="prob-bar-track"><div class="prob-bar-fill" style="width:{pass_prob*100:.1f}%"></div></div>
+    <div class="prob-bar-track"><div class="prob-bar-fill" style="width:{pass_prob*100:.1f}%;background:{pri}"></div></div>
   </div>
   <div class="prob-card prob-card-run">
     <div class="prob-card-label">Run probability</div>
     <div class="prob-card-value">{run_prob:.1%}</div>
-    <div class="prob-bar-track" style="background:#0d1117"><div class="prob-bar-fill" style="width:{run_prob*100:.1f}%;background:#475569"></div></div>
+    <div class="prob-bar-track"><div class="prob-bar-fill" style="width:{run_prob*100:.1f}%;background:#475569"></div></div>
   </div>
   <div class="prob-card prob-card-stat">
     <div class="prob-card-label">Model accuracy</div>
@@ -711,75 +400,45 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── CONTENT PANELS ────────────────────────────────────────────────────────────
-st.markdown('<div class="content-grid">', unsafe_allow_html=True)
+# ── CONTENT ───────────────────────────────────────────────────────────────────
+left, right = st.columns(2)
 
-# LEFT PANEL
-with st.container():
-    st.markdown('<div class="content-panel">', unsafe_allow_html=True)
+with left:
     st.markdown('<div class="section-title">Team tendency vs league</div>', unsafe_allow_html=True)
-
     if lookup:
         team_hist  = float(lookup["pass_prob_hist"])
         league_avg = float(lookup["league_pass_prob_hist"])
         delta      = float(lookup["pass_prob_delta_vs_league"])
         n_plays    = int(lookup["plays"])
         n_league   = int(lookup["league_plays"])
-
-        delta_cls = "positive" if delta >= 0.05 else ("negative" if delta <= -0.05 else "neutral")
+        delta_cls  = "positive" if delta >= 0.05 else ("negative" if delta <= -0.05 else "neutral")
         delta_sign = "▲" if delta > 0 else ("▼" if delta < 0 else "—")
-
         st.markdown(f"""
 <div class="comp-row">
-  <div class="comp-stat">
-    <div class="comp-stat-label">Model prediction</div>
-    <div class="comp-stat-value neutral">{pass_prob:.1%}</div>
-  </div>
-  <div class="comp-stat">
-    <div class="comp-stat-label">{team} hist. pass rate</div>
-    <div class="comp-stat-value">{team_hist:.1%}</div>
-  </div>
-  <div class="comp-stat">
-    <div class="comp-stat-label">League avg</div>
-    <div class="comp-stat-value">{league_avg:.1%}</div>
-  </div>
-  <div class="comp-stat">
-    <div class="comp-stat-label">Team vs league</div>
-    <div class="comp-stat-value {delta_cls}">{delta_sign} {abs(delta):.1%}</div>
-  </div>
+  <div class="comp-stat"><div class="comp-stat-label">Model prediction</div><div class="comp-stat-value neutral">{pass_prob:.1%}</div></div>
+  <div class="comp-stat"><div class="comp-stat-label">{team} hist. pass rate</div><div class="comp-stat-value">{team_hist:.1%}</div></div>
+  <div class="comp-stat"><div class="comp-stat-label">League avg</div><div class="comp-stat-value">{league_avg:.1%}</div></div>
+  <div class="comp-stat"><div class="comp-stat-label">Team vs league</div><div class="comp-stat-value {delta_cls}">{delta_sign} {abs(delta):.1%}</div></div>
 </div>
-<div style="margin-top:8px;font-size:0.75rem;color:#4a5568;">
-  {n_plays} team plays · {n_league} league plays in this bucket
-</div>
+<div style="margin-top:8px;font-size:0.75rem;color:#4a5568;">{n_plays} team plays · {n_league} league plays in this bucket</div>
 """, unsafe_allow_html=True)
-
         if delta >= 0.20:
-            alert_cls = "alert-pass"
-            alert_txt = f"<strong>Pass-heavy tendency.</strong> {team} passes {delta:+.1%} above league average in this situation."
+            st.markdown(f'<div class="alert-box alert-pass"><strong>Pass-heavy tendency.</strong> {team} passes {delta:+.1%} above league average here.</div>', unsafe_allow_html=True)
         elif delta <= -0.20:
-            alert_cls = "alert-run"
-            alert_txt = f"<strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average — expect the run."
+            st.markdown(f'<div class="alert-box alert-run"><strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average — expect the run.</div>', unsafe_allow_html=True)
         else:
-            alert_cls = "alert-neutral"
-            alert_txt = f"Within ±20% of league average. No strong tendency signal in this bucket."
-
-        st.markdown(f'<div class="alert-box {alert_cls}">{alert_txt}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="alert-box alert-neutral">Within ±20% of league average. No strong tendency signal.</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="alert-box alert-neutral">No exact bucket match for this situation.</div>', unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# RIGHT PANEL
-with st.container():
-    st.markdown('<div class="content-panel">', unsafe_allow_html=True)
+with right:
     st.markdown('<div class="section-title">Closest historical plays</div>', unsafe_allow_html=True)
     if comps.empty:
         st.markdown('<div class="alert-box alert-neutral">No comparable plays found.</div>', unsafe_allow_html=True)
     else:
         st.dataframe(comps, use_container_width=True, height=280, hide_index=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.divider()
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["TOP TENDENCIES", "MODEL DETAILS"])
@@ -789,9 +448,9 @@ with tab1:
         st.markdown('<div class="section-title">Top 5 tendencies per team — 2024 season</div>', unsafe_allow_html=True)
         st.caption("Situations where a team deviates ≥20% from league average · min. 10 team plays · min. 20 league plays")
         top5 = TENDENCIES.groupby("team", group_keys=False).head(5).copy()
-        for col in ["delta_vs_league","model_pass_prob","league_pass_rate","team_hist_pass_rate"]:
+        for col in ["delta_vs_league", "model_pass_prob", "league_pass_rate", "team_hist_pass_rate"]:
             if col in top5.columns:
-                top5[col] = top5[col].map(lambda v: f"{float(v):+.1%}" if "delta" in col else f"{float(v):.1%}")
+                top5[col] = top5[col].map(lambda v, c=col: f"{float(v):+.1%}" if "delta" in c else f"{float(v):.1%}")
         st.dataframe(top5, use_container_width=True, height=480, hide_index=True)
         csv = TENDENCIES.groupby("team", group_keys=False).head(5).to_csv(index=False).encode()
         st.download_button("Download CSV", csv, "cfl_top5_tendencies.csv", "text/csv")
@@ -805,16 +464,17 @@ with tab2:
         st.markdown(f"""
 | Metric | v2 | v1 |
 |---|---|---|
-| Accuracy | {METRICS.get("accuracy_at_0_5_threshold",0):.1%} | 71.5% |
-| ROC-AUC | {METRICS.get("roc_auc",0):.3f} | ~0.76 |
-| Log Loss | {METRICS.get("log_loss",0):.4f} | 0.5300 |
+| Accuracy | {METRICS.get("accuracy_at_0_5_threshold", 0):.1%} | 71.5% |
+| ROC-AUC | {METRICS.get("roc_auc", 0):.3f} | ~0.76 |
+| Log Loss | {METRICS.get("log_loss", 0):.4f} | 0.5300 |
 | Split method | Game-based | Random rows |
 """)
     with c2:
-        st.markdown('<div class="section-title">What\'s new in v2</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">What changed in v2</div>', unsafe_allow_html=True)
         for item in METRICS.get("v1_comparison", {}).get("key_improvements", []):
             st.markdown(f"✅ {item}")
     with st.expander("Full model spec"):
-        st.json({k: METRICS[k] for k in ["model_type","features_used","overall_rows_modeled",
-                                           "train_games","test_games","split_method","target_definition"]
-                 if k in METRICS})
+        st.json({k: METRICS[k] for k in [
+            "model_type", "features_used", "overall_rows_modeled",
+            "train_games", "test_games", "split_method", "target_definition"
+        ] if k in METRICS})
