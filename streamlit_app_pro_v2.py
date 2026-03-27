@@ -581,9 +581,11 @@ with tab1:
 .tend-comp-row:last-child {{ border-bottom: none; }}
 </style>
 <div class="tend-card">
-  <div class="tend-header">
-    <div class="tend-badge">{tend_label}</div>
-    <div class="tend-delta">{delta:+.1%} vs league</div>
+    <div class="tend-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="tend-badge">{tend_label}</div>
+      <div class="tend-delta">{delta:+.1%} vs league</div>
+    </div>
   </div>
   <div class="tend-sit-grid">
     <div class="tend-sit-pill"><div class="tend-sit-label">Down</div><div class="tend-sit-value">{down_str2} &amp; {ytg_str}</div></div>
