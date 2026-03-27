@@ -463,14 +463,14 @@ with left:
 </div>
 <div style="margin-top:8px;font-size:0.75rem;color:#94a3b8;">{n_plays} team plays &middot; {n_league} league plays in this bucket</div>
 """, unsafe_allow_html=True)
-        if delta >= 0.20:
+        if n_plays < 10:
+            st.markdown(f'<div class="alert-box alert-neutral"><strong>Low sample size ({n_plays} plays).</strong> Bucket comparison unreliable &mdash; use the model probability ({pass_prob:.1%}) as the primary signal.</div>', unsafe_allow_html=True)
+        elif delta >= 0.20:
             st.markdown(f'<div class="alert-box alert-pass"><strong>Pass-heavy tendency.</strong> {team} passes {delta:+.1%} above league average here.</div>', unsafe_allow_html=True)
         elif delta <= -0.20:
             st.markdown(f'<div class="alert-box alert-run"><strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average &mdash; expect the run.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="alert-box alert-neutral">Within &#177;20% of league average. No strong tendency signal.</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="alert-box alert-neutral">No exact bucket match for this situation.</div>', unsafe_allow_html=True)
 
 with right:
     st.markdown('<div class="section-title">Closest historical plays</div>', unsafe_allow_html=True)
