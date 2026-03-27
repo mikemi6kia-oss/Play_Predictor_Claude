@@ -311,6 +311,32 @@ section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="
 #MainMenu, footer, header {{ visibility: hidden; }}
 .stDeployButton {{ display: none; }}
 div[data-testid="stToolbar"] {{ display: none; }}
+#MainMenu, footer, header {{ visibility: hidden; }}
+.stDeployButton {{ display: none; }}
+div[data-testid="stToolbar"] {{ display: none; }}
+
+.tooltip-card {{ position: relative; }}
+.info-icon {{ font-size: 0.7rem; color: {pri}; cursor: help; vertical-align: middle; }}
+.tooltip-box {{
+    display: none;
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0d1117;
+    border: 1px solid {pri}44;
+    border-radius: 8px;
+    padding: 14px 16px;
+    width: 260px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}}
+.tooltip-card:hover .tooltip-box {{ display: block; }}
+</style>
+""", unsafe_allow_html=True)
 </style>
 """, unsafe_allow_html=True)
 
@@ -418,9 +444,18 @@ st.markdown(f"""
     <div class="prob-card-value">{run_prob:.1%}</div>
     <div class="prob-bar-track"><div class="prob-bar-fill" style="width:{run_prob*100:.1f}%;background:#475569"></div></div>
   </div>
-  <div class="prob-card prob-card-stat">
-    <div class="prob-card-label">Model accuracy</div>
-    <div class="prob-card-value">{acc:.1%}</div>
+  <div class="prob-card prob-card-stat tooltip-card">
+    <div class="prob-card-label">ROC-AUC <span class="info-icon">ⓘ</span></div>
+    <div class="prob-card-value">{auc:.3f}</div>
+    <div class="tooltip-box">
+      <strong>Area Under the Curve</strong><br><br>
+      Measures how well the model separates pass from run across all thresholds — more reliable than accuracy alone.<br><br>
+      <strong>0.5</strong> = coin flip<br>
+      <strong>0.7</strong> = decent<br>
+      <strong>0.8</strong> = strong ✓<br>
+      <strong>0.9+</strong> = exceptional<br><br>
+      This model: <strong>{auc:.3f}</strong> — if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc:.0%} of the time.
+    </div>
   </div>
   <div class="prob-card prob-card-stat">
     <div class="prob-card-label">ROC-AUC</div>
