@@ -468,40 +468,175 @@ with right:
 
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
-tab1, tab2 = st.tabs(["TOP TENDENCIES", "MODEL DETAILS"])
+tab1, = st.tabs(["TOP TENDENCIES"]))
 
 with tab1:
-    if TENDENCIES is not None:
-        st.markdown('<div class="section-title">Top 5 tendencies per team — 2024 season</div>', unsafe_allow_html=True)
-        st.caption("Situations where a team deviates ≥20% from league average · min. 10 team plays · min. 20 league plays")
-        top5 = TENDENCIES.groupby("team", group_keys=False).head(5).copy()
-        for col in ["delta_vs_league", "model_pass_prob", "league_pass_rate", "team_hist_pass_rate"]:
-            if col in top5.columns:
-                top5[col] = top5[col].map(lambda v, c=col: f"{float(v):+.1%}" if "delta" in c else f"{float(v):.1%}")
-        st.dataframe(top5, use_container_width=True, height=480, hide_index=True)
-        csv = TENDENCIES.groupby("team", group_keys=False).head(5).to_csv(index=False).encode()
-        st.download_button("Download CSV", csv, "cfl_top5_tendencies.csv", "text/csv")
-    else:
-        st.info("Run `precompute_tendencies.py` and upload the output CSV to enable this tab.")
+    st.markdown(f'<div class="section-title">Top 3 outlier tendencies — {TEAM_NAMES.get(team, team)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;">Situations where {team} deviates ≥20% from league average · min. 10 team plays · min. 20 league plays</div>', unsafe_allow_html=True)
 
-with tab2:
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown('<div class="section-title">Performance</div>', unsafe_allow_html=True)
-        st.markdown(f"""
-| Metric | v2 | v1 |
-|---|---|---|
-| Accuracy | {METRICS.get("accuracy_at_0_5_threshold", 0):.1%} | 71.5% |
-| ROC-AUC | {METRICS.get("roc_auc", 0):.3f} | ~0.76 |
-| Log Loss | {METRICS.get("log_loss", 0):.4f} | 0.5300 |
-| Split method | Game-based | Random rows |
-""")
-    with c2:
-        st.markdown('<div class="section-title">What changed in v2</div>', unsafe_allow_html=True)
-        for item in METRICS.get("v1_comparison", {}).get("key_improvements", []):
-            st.markdown(f"✅ {item}")
-    with st.expander("Full model spec"):
-        st.json({k: METRICS[k] for k in [
-            "model_type", "features_used", "overall_rows_modeled",
-            "train_games", "test_games", "split_method", "target_definition"
-        ] if k in METRICS})
+    if TENDENCIES is not None:
+        team_tends = TENDENCIES[TENDENCIES["team"] == team].copy()
+        if "abs_delta" not in team_tends.columns:
+            team_tends["abs_delta"] = team_tends["delta_vs_league"].abs()
+        team_tends = team_tends.sort_values("abs_delta", ascending=False).head(3)
+
+        if team_tends.empty:
+            st.markdown('<div class="alert-box alert-neutral">No strong tendencies found for this team.</div>', unsafe_allow_html=True)
+        else:
+            for _, row in team_tends.iterrows():
+                delta      = float(row["delta_vs_league"])
+                league_rate= float(row["league_pass_rate"])
+                team_rate  = float(row.get("team_hist_pass_rate", league_rate + delta))
+                is_pass    = delta > 0
+                card_color = pri if is_pass else "#ef4444"
+                tend_label = "PASS HEAVY" if is_pass else "RUN HEAVY"
+                bar_pct    = min(abs(delta) * 100 / 60, 100)
+
+                # Situation labels
+                down_str  = {1:"1st", 2:"2nd", 3:"3rd"}.get(int(row["down"]), "—")
+                ytg_str   = f"{int(row['yards_to_go'])} yds"
+                side_str  = f"{row['field_side']} {int(row['ball_on'])}"
+                score_str = f"{int(row['score_diff']):+d}"
+                clock_str = f"Q{int(row['quarter'])} {int(row['minutes'])}:{int(row['seconds']):02d}"
+
+                # Pull comparable plays for this scenario
+                sc_yte = yte_calc(row["field_side"], row["ball_on"])
+                sc_sec = half_seconds(int(row["quarter"]), int(row["minutes"]), int(row["seconds"]))
+                sc_comps = get_comparables(
+                    team, int(row["quarter"]), int(row["down"]),
+                    float(row["yards_to_go"]), sc_yte, sc_sec,
+                    int(row["score_diff"]), n=3
+                )
+
+                comp_rows_html = ""
+                if not sc_comps.empty:
+                    for _, cr in sc_comps.iterrows():
+                        cp_color = pri if cr["Play"] == "PASS" else "#475569"
+                        desc = str(cr["description"])[:65] + "…" if len(str(cr["description"])) > 65 else str(cr["description"])
+                        comp_rows_html += f"""
+                        <div class="tend-comp-row">
+                          <div class="play-badge" style="background:{cp_color}22;border-color:{cp_color}66;color:{cp_color};font-size:0.6rem;padding:2px 6px;">{cr["Play"]}</div>
+                          <div style="font-size:0.76rem;color:#94a3b8;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{desc}</div>
+                        </div>"""
+
+                st.markdown(f"""
+<style>
+.tend-card {{
+    background: #0d1117;
+    border: 1px solid #1e2433;
+    border-left: 3px solid {card_color};
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+}}
+.tend-header {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}}
+.tend-badge {{
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    background: {card_color}22;
+    border: 1px solid {card_color}66;
+    color: {card_color};
+    border-radius: 4px;
+    padding: 3px 10px;
+}}
+.tend-delta {{
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: {card_color};
+    line-height: 1;
+}}
+.tend-sit-grid {{
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}}
+.tend-sit-pill {{
+    background: #111827;
+    border: 1px solid #1e2433;
+    border-radius: 5px;
+    padding: 5px 10px;
+}}
+.tend-sit-label {{
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #4a5568;
+    margin-bottom: 2px;
+}}
+.tend-sit-value {{
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    line-height: 1;
+}}
+.tend-bar-track {{
+    height: 6px;
+    background: #1e2433;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    overflow: hidden;
+}}
+.tend-bar-fill {{
+    height: 100%;
+    background: {card_color};
+    border-radius: 3px;
+    width: {bar_pct:.1f}%;
+}}
+.tend-bar-labels {{
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: #4a5568;
+    margin-bottom: 14px;
+}}
+.tend-comps-title {{
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4a5568;
+    margin-bottom: 8px;
+}}
+.tend-comp-row {{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e2433;
+}}
+.tend-comp-row:last-child {{ border-bottom: none; }}
+</style>
+<div class="tend-card">
+  <div class="tend-header">
+    <div class="tend-badge">{tend_label}</div>
+    <div class="tend-delta">{delta:+.1%} vs league</div>
+  </div>
+  <div class="tend-sit-grid">
+    <div class="tend-sit-pill"><div class="tend-sit-label">Down</div><div class="tend-sit-value">{down_str} &amp; {ytg_str}</div></div>
+    <div class="tend-sit-pill"><div class="tend-sit-label">Field</div><div class="tend-sit-value">{side_str}</div></div>
+    <div class="tend-sit-pill"><div class="tend-sit-label">Clock</div><div class="tend-sit-value">{clock_str}</div></div>
+    <div class="tend-sit-pill"><div class="tend-sit-label">Score diff</div><div class="tend-sit-value">{score_str}</div></div>
+    <div class="tend-sit-pill"><div class="tend-sit-label">{team} pass rate</div><div class="tend-sit-value">{team_rate:.1%}</div></div>
+    <div class="tend-sit-pill"><div class="tend-sit-label">League avg</div><div class="tend-sit-value">{league_rate:.1%}</div></div>
+  </div>
+  <div class="tend-bar-track"><div class="tend-bar-fill"></div></div>
+  <div class="tend-bar-labels">
+    <span>0%</span><span>Deviation from league avg</span><span>60%+</span>
+  </div>
+  <div class="tend-comps-title">Example plays from this situation</div>
+  <div>{comp_rows_html if comp_rows_html else '<div style="font-size:0.76rem;color:#4a5568;">No comparable plays found.</div>'}</div>
+</div>
+""", unsafe_allow_html=True)
+    else:
+        st.info("Run `precompute_tendencies.py` and upload `cfl_top5_tendencies_precomputed.csv` to enable this tab.")
