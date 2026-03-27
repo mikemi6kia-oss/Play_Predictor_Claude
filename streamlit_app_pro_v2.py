@@ -191,7 +191,7 @@ def distance_bucket(x):
 
 def field_bucket(x):
     if x <= 20: return "Red Zone"
-    if x <= 40: return "Opp. Territory"
+    if x <= 40: return "Opponent Territory"
     if x <= 60: return "Midfield"
     if x <= 80: return "Own Territory"
     return "Own Deep"
