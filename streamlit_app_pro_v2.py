@@ -453,7 +453,7 @@ st.markdown(f"""
       Measures how well the model separates pass from run across all thresholds &mdash; more reliable than accuracy alone.<br><br>
       <strong>0.5</strong> = coin flip<br>
       <strong>0.7</strong> = decent<br>
-      <strong>0.8</strong> = strong ✓<br>
+      <strong>0.8</strong> = strong &#10003;<br>
       <strong>0.9+</strong> = exceptional<br><br>
       This model: <strong>{auc:.3f}</strong> &mdash; if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc:.0%} of the time.
     </div>
