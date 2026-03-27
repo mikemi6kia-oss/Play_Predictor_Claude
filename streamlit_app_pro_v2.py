@@ -107,10 +107,72 @@ def load_metrics():
     with open(BASE / "cfl_model_metrics_v2.json", "r") as f:
         return json.load(f)
 
+def get_bucket_static(lookup, team, down, ytg, yte, score_diff, sec):
+    sub = lookup[
+        (lookup["possession_team"] == team) &
+        (lookup["down"] == down) &
+        (lookup["distance_bucket"] == distance_bucket(ytg)) &
+        (lookup["field_bucket"] == field_bucket(yte)) &
+        (lookup["score_bucket"] == score_bucket(score_diff)) &
+        (lookup["time_bucket"] == time_bucket(sec))
+    ]
+    return None if sub.empty else sub.sort_values("plays", ascending=False).iloc[0].to_dict()
+
 @st.cache_data
-def load_tendencies():
-    p = BASE / "cfl_top5_tendencies_precomputed.csv"
-    return pd.read_csv(p) if p.exists() else None
+def compute_tendencies(_team_lookup):
+    rows = []
+    teams = sorted(_team_lookup["possession_team"].dropna().unique().tolist())
+    
+    quarters     = [1, 2, 3, 4]
+    downs        = [1, 2]
+    minutes_list = [12, 9, 6, 3]
+    ytg_values   = [2.0, 5.0, 10.0]
+    sides        = ["Own", "Opp"]
+    ball_ons     = [15.0, 30.0, 45.0]
+    score_diffs  = [-10, -3, 0, 3, 10]
+
+    for team in teams:
+        def_team = [t for t in teams if t != team][0]
+        for q in quarters:
+            for d in downs:
+                for mins in minutes_list:
+                    for ytg in ytg_values:
+                        for side in sides:
+                            for ball in ball_ons:
+                                for score in score_diffs:
+                                    try:
+                                        yte = yte_calc(side, ball)
+                                        sec = half_seconds(q, mins, 0)
+                                        lk  = get_bucket_static(_team_lookup, team, d, ytg, yte, score, sec)
+                                        if lk is None:
+                                            continue
+                                        delta = float(lk["pass_prob_delta_vs_league"])
+                                        if abs(delta) >= 0.20 and int(lk["plays"]) >= 10 and int(lk["league_plays"]) >= 20:
+                                            rows.append({
+                                                "team":               team,
+                                                "quarter":            q,
+                                                "down":               d,
+                                                "minutes":            mins,
+                                                "seconds":            0,
+                                                "yards_to_go":        ytg,
+                                                "field_side":         side,
+                                                "ball_on":            ball,
+                                                "score_diff":         score,
+                                                "delta_vs_league":    delta,
+                                                "abs_delta":          abs(delta),
+                                                "team_hist_pass_rate":float(lk["pass_prob_hist"]),
+                                                "league_pass_rate":   float(lk["league_pass_prob_hist"]),
+                                                "tendency":           "Pass-heavy" if delta > 0 else "Run-heavy",
+                                                "team_plays":         int(lk["plays"]),
+                                                "league_plays":       int(lk["league_plays"]),
+                                            })
+                                    except Exception:
+                                        continue
+
+    if not rows:
+        return pd.DataFrame()
+    df = pd.DataFrame(rows).sort_values(["team", "abs_delta"], ascending=[True, False])
+    return df
 
 MODEL_PKG   = load_model()
 MODEL       = MODEL_PKG["model"]
