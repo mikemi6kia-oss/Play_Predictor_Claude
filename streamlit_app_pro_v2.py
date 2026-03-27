@@ -122,7 +122,6 @@ def get_bucket_static(lookup, team, down, ytg, yte, score_diff, sec):
 def compute_tendencies(_team_lookup):
     rows = []
     teams = sorted(_team_lookup["possession_team"].dropna().unique().tolist())
-
     for team in teams:
         for q in [1, 2, 3, 4]:
             for d in [1, 2]:
@@ -131,14 +130,13 @@ def compute_tendencies(_team_lookup):
                         for side in ["Own", "Opp"]:
                             for ball in [15.0, 30.0, 45.0]:
                                 for score in [-10.0, -3.0, 0.0, 3.0, 10.0]:
-                                        sb = score_bucket(float(score))
                                     try:
                                         yte = yte_calc(side, ball)
                                         sec = half_seconds(q, mins, 0)
-                                        db  = distance_bucket(ytg)
-                                        fb  = field_bucket(yte)
-                                        sb  = score_bucket(score)
-                                        tb  = time_bucket(sec)
+                                        db = distance_bucket(ytg)
+                                        fb = field_bucket(yte)
+                                        sb = score_bucket(float(score))
+                                        tb = time_bucket(sec)
                                         sub = _team_lookup[
                                             (_team_lookup["possession_team"] == team) &
                                             (_team_lookup["down"] == d) &
@@ -153,26 +151,25 @@ def compute_tendencies(_team_lookup):
                                         delta = float(lk["pass_prob_delta_vs_league"])
                                         if abs(delta) >= 0.20 and int(lk["plays"]) >= 10 and int(lk["league_plays"]) >= 20:
                                             rows.append({
-                                                "team":               team,
-                                                "quarter":            q,
-                                                "down":               d,
-                                                "minutes":            mins,
-                                                "seconds":            0,
-                                                "yards_to_go":        ytg,
-                                                "field_side":         side,
-                                                "ball_on":            ball,
-                                                "score_diff":         score,
-                                                "delta_vs_league":    delta,
-                                                "abs_delta":          abs(delta),
+                                                "team": team,
+                                                "quarter": q,
+                                                "down": d,
+                                                "minutes": mins,
+                                                "seconds": 0,
+                                                "yards_to_go": ytg,
+                                                "field_side": side,
+                                                "ball_on": ball,
+                                                "score_diff": score,
+                                                "delta_vs_league": delta,
+                                                "abs_delta": abs(delta),
                                                 "team_hist_pass_rate": float(lk["pass_prob_hist"]),
-                                                "league_pass_rate":   float(lk["league_pass_prob_hist"]),
-                                                "tendency":           "Pass-heavy" if delta > 0 else "Run-heavy",
-                                                "team_plays":         int(lk["plays"]),
-                                                "league_plays":       int(lk["league_plays"]),
+                                                "league_pass_rate": float(lk["league_pass_prob_hist"]),
+                                                "tendency": "Pass-heavy" if delta > 0 else "Run-heavy",
+                                                "team_plays": int(lk["plays"]),
+                                                "league_plays": int(lk["league_plays"]),
                                             })
                                     except Exception:
                                         continue
-
     if not rows:
         return pd.DataFrame(columns=["team","quarter","down","minutes","seconds",
                                      "yards_to_go","field_side","ball_on","score_diff",
