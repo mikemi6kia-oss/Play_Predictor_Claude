@@ -149,7 +149,7 @@ def compute_tendencies(_team_lookup):
                                             continue
                                         lk = sub.sort_values("plays", ascending=False).iloc[0]
                                         delta = float(lk["pass_prob_delta_vs_league"])
-                                        if abs(delta) >= 0.20 and int(lk["plays"]) >= 10 and int(lk["league_plays"]) >= 20:
+                                       if abs(delta) >= 0.10 and int(lk["plays"]) >= 5 and int(lk["league_plays"]) >= 10:
                                             rows.append({
                                                 "team": team,
                                                 "quarter": q,
