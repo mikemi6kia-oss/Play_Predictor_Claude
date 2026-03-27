@@ -363,7 +363,7 @@ st.markdown(f"""
 <div class="scout-header">
   <div class="scout-header-left">
     <div class="scout-wordmark">CFL Analytics</div>
-    <div class="scout-title">Play Tendency Scout</div>
+    <div class="scout-title">Play Tendency Outliers</div>
   </div>
   <div class="scout-header-right">
     <div class="team-badge">
