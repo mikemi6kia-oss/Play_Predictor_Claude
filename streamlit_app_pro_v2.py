@@ -250,7 +250,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 .prob-bar-track {{ height: 4px; background: #1e2433; border-radius: 2px; margin-top: 8px; overflow: hidden; }}
 .prob-bar-fill {{ height: 100%; border-radius: 2px; }}
 
-.section-title {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: {pri}; margin: 0 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid {pri}33; }}
+.section-title {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #7bafd4; margin: 0 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid {pri}33; }}
 
 .comp-row {{ display: flex; gap: 12px; margin-top: 12px; }}
 .comp-stat {{ flex: 1; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 12px 14px; }}
@@ -268,7 +268,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 section[data-testid="stSidebar"] {{ background: #0d1117 !important; border-right: 1px solid #1e2433 !important; }}
 section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{ color: #94a3b8 !important; font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; }}
 section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="stSidebar"] input {{ background: #111827 !important; border: 1px solid #1e2433 !important; color: #e2e8f0 !important; border-radius: 6px !important; }}
-.sidebar-heading {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: {pri}; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid {pri}33; }}
+.sidebar-heading {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #7bafd4; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid {pri}33; }}
 
 .stTabs [data-baseweb="tab-list"] {{ background: #0d1117 !important; border-bottom: 1px solid #1e2433 !important; padding: 0 28px !important; gap: 0 !important; }}
 .stTabs [data-baseweb="tab"] {{ font-family: 'Barlow Condensed', sans-serif !important; font-size: 0.8rem !important; font-weight: 700 !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; color: #94a3b8 !important; padding: 12px 20px !important; background: transparent !important; }}
