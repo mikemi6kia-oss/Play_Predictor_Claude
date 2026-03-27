@@ -186,20 +186,6 @@ TEAM_LOOKUP = load_team_lookup()
 COMPS       = load_comparables()
 METRICS     = load_metrics()
 TENDENCIES  = compute_tendencies(TEAM_LOOKUP)
-st.write("Tendencies shape:", TENDENCIES.shape)
-test_sub = TEAM_LOOKUP[
-    (TEAM_LOOKUP["possession_team"] == "WPG") &
-    (TEAM_LOOKUP["down"] == 1)
-st.write("Down dtype:", TEAM_LOOKUP["down"].dtype)
-st.write("Down sample values:", TEAM_LOOKUP["down"].unique())
-]
-st.write("WPG down=1 rows:", len(test_sub))
-st.write("Score bucket values:", TEAM_LOOKUP["score_bucket"].unique())
-st.write("Time bucket values:", TEAM_LOOKUP["time_bucket"].unique())
-st.write("Distance bucket values:", TEAM_LOOKUP["distance_bucket"].unique())
-st.write("Tendencies shape:", TENDENCIES.shape)
-st.write("Columns:", TENDENCIES.columns.tolist())
-st.write("Bucket sample:", TEAM_LOOKUP["field_bucket"].unique())
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
 
 
