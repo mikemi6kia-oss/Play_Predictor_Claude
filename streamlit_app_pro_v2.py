@@ -183,6 +183,9 @@ TEAM_LOOKUP = load_team_lookup()
 COMPS       = load_comparables()
 METRICS     = load_metrics()
 TENDENCIES  = compute_tendencies(TEAM_LOOKUP)
+st.write("Tendencies shape:", TENDENCIES.shape)
+st.write("Columns:", TENDENCIES.columns.tolist())
+st.write("Bucket sample:", TEAM_LOOKUP["field_bucket"].unique())
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
 
 
