@@ -130,7 +130,7 @@ def compute_tendencies(_team_lookup):
                     for ytg in [2.0, 5.0, 10.0]:
                         for side in ["Own", "Opp"]:
                             for ball in [15.0, 30.0, 45.0]:
-                                for score in [-10, -3, 0, 3, 10]:
+                                for score in [sb = score_bucket(float(score))]:
                                     try:
                                         yte = yte_calc(side, ball)
                                         sec = half_seconds(q, mins, 0)
@@ -205,6 +205,7 @@ def field_bucket(x):
     return "Own Deep"
 
 def score_bucket(x):
+    x = float(x)
     if x <= -8: return "Trailing 8+"
     if x <= -1: return "Trailing 1-7"
     if x == 0:  return "Tied"
