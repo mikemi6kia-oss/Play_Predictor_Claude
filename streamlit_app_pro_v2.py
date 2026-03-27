@@ -279,7 +279,7 @@ section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="
 .stDeployButton {{ display: none; }}
 div[data-testid="stToolbar"] {{ display: none; }}
 </style>
-""", unsafe_allow_html=True)0
+""", unsafe_allow_html=True)
 
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
