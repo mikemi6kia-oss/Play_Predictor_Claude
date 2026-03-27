@@ -111,8 +111,8 @@ def load_metrics():
 def compute_tendencies(_team_lookup):
     df = _team_lookup.copy()
     df = df[
-        (df["plays"] >= 5) &
-        (df["league_plays"] >= 10) &
+        (df["plays"] >= 10) &
+        (df["league_plays"] >= 20) &
         (df["pass_prob_delta_vs_league"].abs() >= 0.10)
     ].copy()
     df["abs_delta"] = df["pass_prob_delta_vs_league"].abs()
