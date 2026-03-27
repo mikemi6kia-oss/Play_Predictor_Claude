@@ -188,6 +188,7 @@ TEAM_LOOKUP = load_team_lookup()
 COMPS       = load_comparables()
 METRICS     = load_metrics()
 TENDENCIES  = compute_tendencies(TEAM_LOOKUP)
+st.write(TEAM_LOOKUP[TEAM_LOOKUP["possession_team"] == "WPG"][["down","distance_bucket","field_bucket","score_bucket","time_bucket","plays","pass_prob_delta_vs_league"]].head(20))
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
 
 
