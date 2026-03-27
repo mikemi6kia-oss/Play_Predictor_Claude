@@ -468,7 +468,6 @@ with right:
 <div class="play-feed">{rows_html}</div>
 """, unsafe_allow_html=True)
 
-st.divider()
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["TOP TENDENCIES", "MODEL DETAILS"])
