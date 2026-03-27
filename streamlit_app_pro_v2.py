@@ -416,7 +416,7 @@ st.markdown(f"""
   <div class="live-sep"></div>
   <div class="live-item"><div class="live-label">Field</div><div class="live-value">{field_side} {ball_on:g}</div></div>
   <div class="live-sep"></div>
-  <div class="live-item"><div class="live-label">Clock</div><div class="live-value">Q{quarter} · {minutes}:{str(seconds).zfill(2)}</div></div>
+  <div class="live-item"><div class="live-label">Clock</div><div class="live-value">Q{quarter} &middot; {minutes}:{str(seconds).zfill(2)}</div></div>
   <div class="live-sep"></div>
   <div class="live-item"><div class="live-label">Score diff</div><div class="live-value">{score_diff:+d}</div></div>
   <div class="live-sep"></div>
@@ -424,7 +424,7 @@ st.markdown(f"""
   <div class="live-sep"></div>
   <div class="live-item"><div class="live-label">Field zone</div><div class="live-value">{field_bucket(yte)}</div></div>
   <div class="live-sep"></div>
-  <div class="live-item"><div class="live-label">Game state</div><div class="live-value">{score_bucket(score_diff)} · {time_bucket(sec_half)}</div></div>
+  <div class="live-item"><div class="live-label">Game state</div><div class="live-value">{score_bucket(score_diff)} &middot; {time_bucket(sec_half)}</div></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -488,7 +488,7 @@ with left:
   <div class="comp-stat"><div class="comp-stat-label">League avg</div><div class="comp-stat-value">{league_avg:.1%}</div></div>
   <div class="comp-stat"><div class="comp-stat-label">Team vs league</div><div class="comp-stat-value {delta_cls}">{delta_sign} {abs(delta):.1%}</div></div>
 </div>
-<div style="margin-top:8px;font-size:0.75rem;color:#94a3b8;">{n_plays} team plays · {n_league} league plays in this bucket</div>
+<div style="margin-top:8px;font-size:0.75rem;color:#94a3b8;">{n_plays} team plays &middot; {n_league} league plays in this bucket</div>
 """, unsafe_allow_html=True)
         if delta >= 0.20:
             st.markdown(f'<div class="alert-box alert-pass"><strong>Pass-heavy tendency.</strong> {team} passes {delta:+.1%} above league average here.</div>', unsafe_allow_html=True)
@@ -542,7 +542,7 @@ tab1, = st.tabs(["TOP TENDENCIES"])
 
 with tab1:
     st.markdown(f'<div class="section-title">Top 3 outlier tendencies — {TEAM_NAMES.get(team, team)}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;">Situations where {team} deviates ≥20% from league average · min. 10 team plays · min. 20 league plays</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;">Situations where {team} deviates ≥20% from league average &middot; min. 10 team plays &middot; min. 20 league plays</div>', unsafe_allow_html=True)
 
     if TENDENCIES is not None:
         team_tends = TENDENCIES[TENDENCIES["team"] == team].copy()
@@ -588,7 +588,7 @@ with tab1:
                           <div class="play-badge" style="background:{cp_color}22;border-color:{cp_color}66;color:{cp_color};font-size:0.6rem;padding:2px 6px;">{cr["Play"]}</div>
                           <div style="flex:1;min-width:0;">
                             <div style="font-size:0.76rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{desc}</div>
-                            <div style="font-size:0.65rem;color:#4a5568;margin-top:3px;letter-spacing:0.06em;">GAME <span style="color:#7bafd4">{cr["cfl_game_id"]}</span> &nbsp;·&nbsp; PLAY <span style="color:#7bafd4">{cr["play_id"]}</span></div>
+                            <div style="font-size:0.65rem;color:#4a5568;margin-top:3px;letter-spacing:0.06em;">GAME <span style="color:#7bafd4">{cr["cfl_game_id"]}</span> &nbsp;&middot;&nbsp; PLAY <span style="color:#7bafd4">{cr["play_id"]}</span></div>
                           </div>
                         </div>"""
 
