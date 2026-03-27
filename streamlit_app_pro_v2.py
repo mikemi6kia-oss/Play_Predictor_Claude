@@ -450,12 +450,12 @@ st.markdown(f"""
         <div class="prob-card-value">{auc}</div>
     <div class="tooltip-box">
       <strong>Area Under the Curve</strong><br><br>
-      Measures how well the model separates pass from run across all thresholds — more reliable than accuracy alone.<br><br>
+      Measures how well the model separates pass from run across all thresholds &mdash; more reliable than accuracy alone.<br><br>
       <strong>0.5</strong> = coin flip<br>
       <strong>0.7</strong> = decent<br>
       <strong>0.8</strong> = strong ✓<br>
       <strong>0.9+</strong> = exceptional<br><br>
-      This model: <strong>{auc:.3f}</strong> — if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc:.0%} of the time.
+      This model: <strong>{auc:.3f}</strong> &mdash; if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc:.0%} of the time.
     </div>
   </div>
   <div class="prob-card prob-card-stat">
@@ -481,7 +481,7 @@ with left:
         n_plays    = int(lookup["plays"])
         n_league   = int(lookup["league_plays"])
         delta_cls  = "positive" if delta >= 0.05 else ("negative" if delta <= -0.05 else "neutral")
-        delta_sign = "▲" if delta > 0 else ("▼" if delta < 0 else "—")
+        delta_sign = "▲" if delta > 0 else ("▼" if delta < 0 else "&mdash;")
         st.markdown(f"""
 <div class="comp-row">
   <div class="comp-stat"><div class="comp-stat-label">Model prediction</div><div class="comp-stat-value neutral">{pass_prob:.1%}</div></div>
@@ -494,7 +494,7 @@ with left:
         if delta >= 0.20:
             st.markdown(f'<div class="alert-box alert-pass"><strong>Pass-heavy tendency.</strong> {team} passes {delta:+.1%} above league average here.</div>', unsafe_allow_html=True)
         elif delta <= -0.20:
-            st.markdown(f'<div class="alert-box alert-run"><strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average — expect the run.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-run"><strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average &mdash; expect the run.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="alert-box alert-neutral">Within ±20% of league average. No strong tendency signal.</div>', unsafe_allow_html=True)
     else:
@@ -542,7 +542,7 @@ with right:
 tab1, = st.tabs(["TOP TENDENCIES"])
 
 with tab1:
-    st.markdown(f'<div class="section-title">Top 3 outlier tendencies — {TEAM_NAMES.get(team, team)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">Top 3 outlier tendencies &mdash; {TEAM_NAMES.get(team, team)}</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;">Situations where {team} deviates ≥20% from league average &middot; min. 10 team plays &middot; min. 20 league plays</div>', unsafe_allow_html=True)
 
     if TENDENCIES is not None:
@@ -564,7 +564,7 @@ with tab1:
                 bar_pct    = min(abs(delta) * 100 / 60, 100)
 
                 # Situation labels
-                down_str  = {1:"1st", 2:"2nd", 3:"3rd"}.get(int(row["down"]), "—")
+                down_str  = {1:"1st", 2:"2nd", 3:"3rd"}.get(int(row["down"]), "&mdash;")
                 ytg_str   = f"{int(row['yards_to_go'])} yds"
                 side_str  = f"{row['field_side']} {int(row['ball_on'])}"
                 score_str = f"{int(row['score_diff']):+d}"
