@@ -122,30 +122,33 @@ def get_bucket_static(lookup, team, down, ytg, yte, score_diff, sec):
 def compute_tendencies(_team_lookup):
     rows = []
     teams = sorted(_team_lookup["possession_team"].dropna().unique().tolist())
-    
-    quarters     = [1, 2, 3, 4]
-    downs        = [1, 2]
-    minutes_list = [12, 9, 6, 3]
-    ytg_values   = [2.0, 5.0, 10.0]
-    sides        = ["Own", "Opp"]
-    ball_ons     = [15.0, 30.0, 45.0]
-    score_diffs  = [-10, -3, 0, 3, 10]
 
     for team in teams:
-        def_team = [t for t in teams if t != team][0]
-        for q in quarters:
-            for d in downs:
-                for mins in minutes_list:
-                    for ytg in ytg_values:
-                        for side in sides:
-                            for ball in ball_ons:
-                                for score in score_diffs:
+        for q in [1, 2, 3, 4]:
+            for d in [1, 2]:
+                for mins in [12, 9, 6, 3]:
+                    for ytg in [2.0, 5.0, 10.0]:
+                        for side in ["Own", "Opp"]:
+                            for ball in [15.0, 30.0, 45.0]:
+                                for score in [-10, -3, 0, 3, 10]:
                                     try:
                                         yte = yte_calc(side, ball)
                                         sec = half_seconds(q, mins, 0)
-                                        lk  = get_bucket_static(_team_lookup, team, d, ytg, yte, score, sec)
-                                        if lk is None:
+                                        db  = distance_bucket(ytg)
+                                        fb  = field_bucket(yte)
+                                        sb  = score_bucket(score)
+                                        tb  = time_bucket(sec)
+                                        sub = _team_lookup[
+                                            (_team_lookup["possession_team"] == team) &
+                                            (_team_lookup["down"] == d) &
+                                            (_team_lookup["distance_bucket"] == db) &
+                                            (_team_lookup["field_bucket"] == fb) &
+                                            (_team_lookup["score_bucket"] == sb) &
+                                            (_team_lookup["time_bucket"] == tb)
+                                        ]
+                                        if sub.empty:
                                             continue
+                                        lk = sub.sort_values("plays", ascending=False).iloc[0]
                                         delta = float(lk["pass_prob_delta_vs_league"])
                                         if abs(delta) >= 0.20 and int(lk["plays"]) >= 10 and int(lk["league_plays"]) >= 20:
                                             rows.append({
@@ -160,7 +163,7 @@ def compute_tendencies(_team_lookup):
                                                 "score_diff":         score,
                                                 "delta_vs_league":    delta,
                                                 "abs_delta":          abs(delta),
-                                                "team_hist_pass_rate":float(lk["pass_prob_hist"]),
+                                                "team_hist_pass_rate": float(lk["pass_prob_hist"]),
                                                 "league_pass_rate":   float(lk["league_pass_prob_hist"]),
                                                 "tendency":           "Pass-heavy" if delta > 0 else "Run-heavy",
                                                 "team_plays":         int(lk["plays"]),
@@ -170,9 +173,11 @@ def compute_tendencies(_team_lookup):
                                         continue
 
     if not rows:
-        return pd.DataFrame()
-    df = pd.DataFrame(rows).sort_values(["team", "abs_delta"], ascending=[True, False])
-    return df
+        return pd.DataFrame(columns=["team","quarter","down","minutes","seconds",
+                                     "yards_to_go","field_side","ball_on","score_diff",
+                                     "delta_vs_league","abs_delta","team_hist_pass_rate",
+                                     "league_pass_rate","tendency","team_plays","league_plays"])
+    return pd.DataFrame(rows).sort_values(["team","abs_delta"], ascending=[True,False]).reset_index(drop=True)
 
 MODEL_PKG   = load_model()
 MODEL       = MODEL_PKG["model"]
