@@ -468,7 +468,7 @@ with right:
 
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
-tab1, = st.tabs(["TOP TENDENCIES"]))
+tab1, = st.tabs(["TOP TENDENCIES"])
 
 with tab1:
     st.markdown(f'<div class="section-title">Top 3 outlier tendencies — {TEAM_NAMES.get(team, team)}</div>', unsafe_allow_html=True)
