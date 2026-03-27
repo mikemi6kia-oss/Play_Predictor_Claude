@@ -279,7 +279,7 @@ section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="
 .stDeployButton {{ display: none; }}
 div[data-testid="stToolbar"] {{ display: none; }}
 </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True)0
 
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -436,7 +436,37 @@ with right:
     if comps.empty:
         st.markdown('<div class="alert-box alert-neutral">No comparable plays found.</div>', unsafe_allow_html=True)
     else:
-        st.dataframe(comps, use_container_width=True, height=280, hide_index=True)
+        rows_html = ""
+        for _, row in comps.iterrows():
+            play_color = pri if row["Play"] == "PASS" else "#475569"
+            desc = str(row["description"])[:72] + "…" if len(str(row["description"])) > 72 else str(row["description"])
+            rows_html += f"""
+            <div class="play-row">
+              <div class="play-badge" style="background:{play_color}22;border-color:{play_color}66;color:{play_color}">{row["Play"]}</div>
+              <div class="play-meta">
+                <div class="play-desc">{desc}</div>
+                <div class="play-tags">
+                  <span class="play-tag">Q{int(row["quarter"])}</span>
+                  <span class="play-tag">{int(row["yards_to_go"])} yds to go</span>
+                  <span class="play-tag">{int(row["score_diff_offense"]):+d} score</span>
+                  <span class="play-tag">{row["play_result"]}</span>
+                </div>
+              </div>
+            </div>"""
+
+        st.markdown(f"""
+<style>
+.play-feed {{ display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }}
+.play-row {{ display: flex; align-items: flex-start; gap: 12px; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 10px 14px; transition: border-color 0.15s; }}
+.play-row:hover {{ border-color: {pri}44; }}
+.play-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; border: 1px solid; border-radius: 4px; padding: 3px 8px; min-width: 48px; text-align: center; margin-top: 2px; flex-shrink: 0; }}
+.play-meta {{ flex: 1; min-width: 0; }}
+.play-desc {{ font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.play-tags {{ display: flex; gap: 6px; flex-wrap: wrap; }}
+.play-tag {{ font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; background: #111827; border: 1px solid #1e2433; border-radius: 3px; padding: 2px 6px; }}
+</style>
+<div class="play-feed">{rows_html}</div>
+""", unsafe_allow_html=True)
 
 st.divider()
 
