@@ -186,6 +186,15 @@ TEAM_LOOKUP = load_team_lookup()
 COMPS       = load_comparables()
 METRICS     = load_metrics()
 TENDENCIES  = compute_tendencies(TEAM_LOOKUP)
+test = TEAM_LOOKUP[
+    (TEAM_LOOKUP["possession_team"] == "WPG") &
+    (TEAM_LOOKUP["down"] == float(1)) &
+    (TEAM_LOOKUP["distance_bucket"] == "Long (8+)") &
+    (TEAM_LOOKUP["field_bucket"] == "Own Territory") &
+    (TEAM_LOOKUP["score_bucket"] == "Trailing 8+") &
+    (TEAM_LOOKUP["time_bucket"] == "Early Half")
+]
+st.write("Direct lookup test:", len(test), test.head(2))
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
 
 
