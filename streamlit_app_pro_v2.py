@@ -445,7 +445,7 @@ st.markdown(f"""
     <div class="prob-bar-track"><div class="prob-bar-fill" style="width:{run_prob*100:.1f}%;background:#475569"></div></div>
   </div>
   <div class="prob-card prob-card-stat tooltip-card">
-    <div class="prob-card-label">ROC-AUC <span class="info-icon">ⓘ</span></div>
+    <<span class="info-icon">&#9432;</span>
     <div class="prob-card-value">{auc:.3f}</div>
     <div class="tooltip-box">
       <strong>Area Under the Curve</strong><br><br>
