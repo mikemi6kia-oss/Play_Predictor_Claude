@@ -128,7 +128,7 @@ def compute_tendencies(_team_lookup):
                 for mins in [12, 9, 6, 3]:
                     for ytg in [2.0, 5.0, 10.0]:
                         for side in ["Own", "Opp"]:
-                            for ball in [15.0, 30.0, 45.0]:
+                            for ball in [15.0, 30.0, 45.0, 55.0]:
                                 for score in [-10.0, -3.0, 0.0, 3.0, 10.0]:
                                     try:
                                         yte = yte_calc(side, ball)
