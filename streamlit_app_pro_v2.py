@@ -234,8 +234,8 @@ def get_comparables(team, quarter, down, ytg, yte, sec, score_diff, n=10):
     )
     d = d.sort_values("dist").head(n).copy()
     d["Play"] = np.where(d["called_pass"] == 1, "PASS", "RUN")
-    return d[["Play", "play_result", "description", "cfl_game_id", "quarter",
-              "yards_to_go", "score_diff_offense"]]
+    return d[["cfl_game_id", "play_id", "Play", "play_result", "description", "quarter",
+          "yards_to_go", "score_diff_offense"]]
 
 
 # ── SESSION DEFAULTS ──────────────────────────────────────────────────────────
@@ -551,7 +551,10 @@ with tab1:
                         comp_rows_html += f"""
                         <div class="tend-comp-row">
                           <div class="play-badge" style="background:{cp_color}22;border-color:{cp_color}66;color:{cp_color};font-size:0.6rem;padding:2px 6px;">{cr["Play"]}</div>
-                          <div style="font-size:0.76rem;color:#94a3b8;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{desc}</div>
+                          <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.76rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{desc}</div>
+                            <div style="font-size:0.65rem;color:#4a5568;margin-top:3px;letter-spacing:0.06em;">GAME <span style="color:#7bafd4">{cr["cfl_game_id"]}</span> &nbsp;·&nbsp; PLAY <span style="color:#7bafd4">{cr["play_id"]}</span></div>
+                          </div>
                         </div>"""
 
                 st.markdown(f"""
