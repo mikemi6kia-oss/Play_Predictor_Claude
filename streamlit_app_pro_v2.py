@@ -138,9 +138,9 @@ def compute_tendencies(_team_lookup):
     df["field_side"] = df["field_bucket"]
     df["ball_on"] = df["avg_yards_to_endzone"]
     df["score_diff"] = df["avg_score_diff"]
-    df["minutes"] = (df["avg_seconds_in_half"] // 60).astype(int)
+    df["minutes"] = (df["avg_seconds_in_half"] % 900 // 60).astype(int).clip(0, 15)
+    df["quarter"] = df["avg_seconds_in_half"].apply(lambda s: 1 if s > 900 else 2)
     df["seconds"] = 0
-    df["quarter"] = 2
     df["yards_to_go"] = df["avg_yards"]
     df["team_plays"] = df["plays"].astype(int)
     df["league_plays"] = df["league_plays"].astype(int)
