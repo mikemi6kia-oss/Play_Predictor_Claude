@@ -139,7 +139,7 @@ def compute_tendencies(_team_lookup):
                                         tb = time_bucket(sec)
                                         sub = _team_lookup[
                                             (_team_lookup["possession_team"] == team) &
-                                            (_team_lookup["down"] == float(d)) &
+                                            (_team_lookup["down"].astype(int) == int(d)) &
                                             (_team_lookup["distance_bucket"] == db) &
                                             (_team_lookup["field_bucket"] == fb) &
                                             (_team_lookup["score_bucket"] == sb) &
