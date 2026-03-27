@@ -570,23 +570,10 @@ with tab1:
     justify-content: space-between;
     margin-bottom: 14px;
 }}
-.tend-badge {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    background: {card_color}22;
-    border: 1px solid {card_color}66;
-    color: {card_color};
-    border-radius: 4px;
-    padding: 3px 10px;
+.tend-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: 0.14em; background: {card_color}22; border: 1px solid {card_color}66; color: {card_color}; border-radius: 4px; padding: 3px 10px; }}
+
 }}
-.tend-delta {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: {card_color};
-    line-height: 1;
+.tend-delta {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 800; color: #7bafd4; line-height: 1; }}
 }}
 .tend-sit-grid {{
     display: flex;
@@ -600,20 +587,8 @@ with tab1:
     border-radius: 5px;
     padding: 5px 10px;
 }}
-.tend-sit-label {{
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #4a5568;
-    margin-bottom: 2px;
-}}
-.tend-sit-value {{
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    line-height: 1;
+.tend-sit-label {{ font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #7bafd4; margin-bottom: 2px; }}
+.tend-sit-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1; }}
 }}
 .tend-bar-track {{
     height: 6px;
