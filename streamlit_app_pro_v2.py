@@ -139,7 +139,7 @@ def compute_tendencies(_team_lookup):
                                         tb = time_bucket(sec)
                                         sub = _team_lookup[
                                             (_team_lookup["possession_team"] == team) &
-                                            (_team_lookup["down"] == d) &
+                                            (_team_lookup["down"] == float(d)) &
                                             (_team_lookup["distance_bucket"] == db) &
                                             (_team_lookup["field_bucket"] == fb) &
                                             (_team_lookup["score_bucket"] == sb) &
@@ -190,6 +190,8 @@ st.write("Tendencies shape:", TENDENCIES.shape)
 test_sub = TEAM_LOOKUP[
     (TEAM_LOOKUP["possession_team"] == "WPG") &
     (TEAM_LOOKUP["down"] == 1)
+st.write("Down dtype:", TEAM_LOOKUP["down"].dtype)
+st.write("Down sample values:", TEAM_LOOKUP["down"].unique())
 ]
 st.write("WPG down=1 rows:", len(test_sub))
 st.write("Score bucket values:", TEAM_LOOKUP["score_bucket"].unique())
