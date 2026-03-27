@@ -570,8 +570,7 @@ with tab1:
     justify-content: space-between;
     margin-bottom: 14px;
 }}
-.tend-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: 0.14em; background: {card_color}22; border: 1px solid {card_color}66; color: {card_color}; border-radius: 4px; padding: 3px 10px; }}
-
+.tend-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; background: {card_color}22; border: 1px solid {card_color}66; color: #7bafd4; border-radius: 4px; padding: 3px 10px; }}
 }}
 .tend-delta {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 800; color: #7bafd4; line-height: 1; }}
 }}
