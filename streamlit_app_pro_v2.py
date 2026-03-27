@@ -107,17 +107,6 @@ def load_metrics():
     with open(BASE / "cfl_model_metrics_v2.json", "r") as f:
         return json.load(f)
 
-def get_bucket_static(lookup, team, down, ytg, yte, score_diff, sec):
-    sub = lookup[
-        (lookup["possession_team"] == team) &
-        (lookup["down"] == down) &
-        (lookup["distance_bucket"] == distance_bucket(ytg)) &
-        (lookup["field_bucket"] == field_bucket(yte)) &
-        (lookup["score_bucket"] == score_bucket(score_diff)) &
-        (lookup["time_bucket"] == time_bucket(sec))
-    ]
-    return None if sub.empty else sub.sort_values("plays", ascending=False).iloc[0].to_dict()
-
 @st.cache_data
 def compute_tendencies(_team_lookup):
     df = _team_lookup.copy()
@@ -133,16 +122,16 @@ def compute_tendencies(_team_lookup):
         "pass_prob_hist": "team_hist_pass_rate",
         "league_pass_prob_hist": "league_pass_rate",
     })
-    df["team"] = df["possession_team"]
-    df["down"] = df["down"].astype(int)
+    df["team"]       = df["possession_team"]
+    df["down"]       = df["down"].astype(int)
     df["field_side"] = df["field_bucket"]
-    df["ball_on"] = df["avg_yards_to_endzone"]
+    df["ball_on"]    = df["avg_yards_to_endzone"]
     df["score_diff"] = df["avg_score_diff"]
-    df["minutes"] = (df["avg_seconds_in_half"] % 900 // 60).astype(int).clip(0, 15)
-    df["quarter"] = df["avg_seconds_in_half"].apply(lambda s: 1 if s > 900 else 2)
-    df["seconds"] = 0
-    df["yards_to_go"] = df["avg_yards"]
-    df["team_plays"] = df["plays"].astype(int)
+    df["minutes"]    = (df["avg_seconds_in_half"] % 900 // 60).astype(int).clip(0, 15)
+    df["quarter"]    = df["avg_seconds_in_half"].apply(lambda s: 1 if s > 900 else 2)
+    df["seconds"]    = 0
+    df["yards_to_go"]  = df["avg_yards"]
+    df["team_plays"]   = df["plays"].astype(int)
     df["league_plays"] = df["league_plays"].astype(int)
     return df.sort_values(["possession_team", "abs_delta"], ascending=[True, False]).reset_index(drop=True)
 
@@ -158,6 +147,7 @@ TENDENCIES  = compute_tendencies(TEAM_LOOKUP)
 TEAMS       = sorted(TEAM_LOOKUP["possession_team"].dropna().astype(str).unique().tolist())
 
 
+# ── HELPERS ───────────────────────────────────────────────────────────────────
 def distance_bucket(x):
     return "Short (1-3)" if x <= 3 else ("Medium (4-7)" if x <= 7 else "Long (8+)")
 
@@ -234,8 +224,8 @@ def get_comparables(team, quarter, down, ytg, yte, sec, score_diff, n=10):
     )
     d = d.sort_values("dist").head(n).copy()
     d["Play"] = np.where(d["called_pass"] == 1, "PASS", "RUN")
-    return d[["cfl_game_id", "play_id", "Play", "play_result", "description", "quarter",
-          "yards_to_go", "score_diff_offense"]]
+    return d[["cfl_game_id", "play_id", "Play", "play_result", "description",
+              "quarter", "yards_to_go", "score_diff_offense"]]
 
 
 # ── SESSION DEFAULTS ──────────────────────────────────────────────────────────
@@ -285,6 +275,11 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 .prob-bar-track {{ height: 4px; background: #1e2433; border-radius: 2px; margin-top: 8px; overflow: hidden; }}
 .prob-bar-fill {{ height: 100%; border-radius: 2px; }}
 
+.tooltip-card {{ position: relative; }}
+.info-icon {{ font-size: 0.7rem; color: {pri}; cursor: help; vertical-align: middle; }}
+.tooltip-box {{ display: none; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #0d1117; border: 1px solid {pri}44; border-radius: 8px; padding: 14px 16px; width: 260px; font-size: 0.78rem; color: #94a3b8; line-height: 1.5; z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }}
+.tooltip-card:hover .tooltip-box {{ display: block; }}
+
 .section-title {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: #7bafd4; margin: 0 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid {pri}33; }}
 .comp-row {{ display: flex; gap: 12px; margin-top: 12px; }}
 .comp-stat {{ flex: 1; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 12px 14px; }}
@@ -303,6 +298,7 @@ section[data-testid="stSidebar"] {{ background: #0d1117 !important; border-right
 section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{ color: #94a3b8 !important; font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; }}
 section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="stSidebar"] input {{ background: #111827 !important; border: 1px solid #1e2433 !important; color: #e2e8f0 !important; border-radius: 6px !important; }}
 .sidebar-heading {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: #7bafd4; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid {pri}33; }}
+
 .stTabs [data-baseweb="tab-list"] {{ background: #0d1117 !important; border-bottom: 1px solid #1e2433 !important; padding: 0 28px !important; gap: 0 !important; }}
 .stTabs [data-baseweb="tab"] {{ font-family: 'Barlow Condensed', sans-serif !important; font-size: 0.8rem !important; font-weight: 700 !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; color: #94a3b8 !important; padding: 12px 20px !important; background: transparent !important; }}
 .stTabs [aria-selected="true"] {{ color: {pri} !important; border-bottom: 2px solid {pri} !important; }}
@@ -311,40 +307,14 @@ section[data-testid="stSidebar"] .stSelectbox > div > div, section[data-testid="
 #MainMenu, footer, header {{ visibility: hidden; }}
 .stDeployButton {{ display: none; }}
 div[data-testid="stToolbar"] {{ display: none; }}
-#MainMenu, footer, header {{ visibility: hidden; }}
-.stDeployButton {{ display: none; }}
-div[data-testid="stToolbar"] {{ display: none; }}
-
-.tooltip-card {{ position: relative; }}
-.info-icon {{ font-size: 0.7rem; color: {pri}; cursor: help; vertical-align: middle; }}
-.tooltip-box {{
-    display: none;
-    position: absolute;
-    bottom: 110%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #0d1117;
-    border: 1px solid {pri}44;
-    border-radius: 8px;
-    padding: 14px 16px;
-    width: 260px;
-    font-size: 0.78rem;
-    color: #94a3b8;
-    line-height: 1.5;
-    z-index: 999;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}}
-.tooltip-card:hover .tooltip-box {{ display: block; }}
-</style>
-""", unsafe_allow_html=True)
 </style>
 """, unsafe_allow_html=True)
 
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(f'<div class="sidebar-heading">Offense</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-heading">Offense</div>', unsafe_allow_html=True)
     st.selectbox("Team", TEAMS, key="team", label_visibility="collapsed")
-    st.markdown(f'<div class="sidebar-heading">Defense</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-heading">Defense</div>', unsafe_allow_html=True)
     st.selectbox("Defense", TEAMS, key="def_team", label_visibility="collapsed")
     st.markdown('<div class="sidebar-heading">Game Clock</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
@@ -400,7 +370,7 @@ st.markdown(f"""
       {logo_html}
       <div>
         <div class="team-badge-name">{TEAM_NAMES.get(team, team)}</div>
-                  <div class="team-badge-label">Offense &middot; vs {def_team}</div>
+        <div class="team-badge-label">Offense &middot; vs {def_team}</div>
       </div>
     </div>
   </div>
@@ -429,10 +399,12 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── PROBABILITY HERO ──────────────────────────────────────────────────────────
-acc = METRICS.get("accuracy_at_0_5_threshold", 0)
-auc = METRICS.get("roc_auc", 0)
-auc_str = f"{auc_str}"
-n   = int(lookup["plays"]) if lookup else 0
+acc     = METRICS.get("accuracy_at_0_5_threshold", 0)
+auc     = METRICS.get("roc_auc", 0)
+auc_str = f"{auc:.3f}"
+auc_pct = f"{auc:.0%}"
+n       = int(lookup["plays"]) if lookup else 0
+
 st.markdown(f"""
 <div class="prob-hero">
   <div class="prob-card prob-card-pass">
@@ -445,9 +417,13 @@ st.markdown(f"""
     <div class="prob-card-value">{run_prob:.1%}</div>
     <div class="prob-bar-track"><div class="prob-bar-fill" style="width:{run_prob*100:.1f}%;background:#475569"></div></div>
   </div>
+  <div class="prob-card prob-card-stat">
+    <div class="prob-card-label">Model accuracy</div>
+    <div class="prob-card-value">{acc:.1%}</div>
+  </div>
   <div class="prob-card prob-card-stat tooltip-card">
-    <<span class="info-icon">&#9432;</span>
-        <div class="prob-card-value">{auc}</div>
+    <div class="prob-card-label">ROC-AUC &#9432;</div>
+    <div class="prob-card-value">{auc_str}</div>
     <div class="tooltip-box">
       <strong>Area Under the Curve</strong><br><br>
       Measures how well the model separates pass from run across all thresholds &mdash; more reliable than accuracy alone.<br><br>
@@ -455,12 +431,8 @@ st.markdown(f"""
       <strong>0.7</strong> = decent<br>
       <strong>0.8</strong> = strong &#10003;<br>
       <strong>0.9+</strong> = exceptional<br><br>
-      This model: <strong>{auc_str}</strong> &mdash; if you randomly pick one pass and one run play, the model ranks the pass as more likely to be a pass {auc_pct} of the time.
+      This model: <strong>{auc_str}</strong> &mdash; if you randomly pick one pass play and one run play, the model ranks the pass correctly {auc_pct} of the time.
     </div>
-  </div>
-  <div class="prob-card prob-card-stat">
-    <div class="prob-card-label">ROC-AUC</div>
-    <div class="prob-card-value">{auc_str}</div>
   </div>
   <div class="prob-card prob-card-stat">
     <div class="prob-card-label">Bucket sample</div>
@@ -481,7 +453,7 @@ with left:
         n_plays    = int(lookup["plays"])
         n_league   = int(lookup["league_plays"])
         delta_cls  = "positive" if delta >= 0.05 else ("negative" if delta <= -0.05 else "neutral")
-        delta_sign = "▲" if delta > 0 else ("▼" if delta < 0 else "&mdash;")
+        delta_sign = "&#9650;" if delta > 0 else ("&#9660;" if delta < 0 else "&mdash;")
         st.markdown(f"""
 <div class="comp-row">
   <div class="comp-stat"><div class="comp-stat-label">Model prediction</div><div class="comp-stat-value neutral">{pass_prob:.1%}</div></div>
@@ -496,7 +468,7 @@ with left:
         elif delta <= -0.20:
             st.markdown(f'<div class="alert-box alert-run"><strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average &mdash; expect the run.</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="alert-box alert-neutral">Within ±20% of league average. No strong tendency signal.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="alert-box alert-neutral">Within &#177;20% of league average. No strong tendency signal.</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="alert-box alert-neutral">No exact bucket match for this situation.</div>', unsafe_allow_html=True)
 
@@ -508,34 +480,33 @@ with right:
         rows_html = ""
         for _, row in comps.iterrows():
             play_color = pri if row["Play"] == "PASS" else "#475569"
-            desc = str(row["description"])[:72] + "…" if len(str(row["description"])) > 72 else str(row["description"])
-            rows_html += f"""
-            <div class="play-row">
-              <div class="play-badge" style="background:{play_color}22;border-color:{play_color}66;color:{play_color}">{row["Play"]}</div>
-              <div class="play-meta">
-                <div class="play-desc">{desc}</div>
-                <div class="play-tags">
-                  <span class="play-tag">Q{int(row["quarter"])}</span>
-                  <span class="play-tag">{int(row["yards_to_go"])} yds to go</span>
-                  <span class="play-tag">{int(row["score_diff_offense"]):+d} score</span>
-                  <span class="play-tag">{row["play_result"]}</span>
-                </div>
-              </div>
-            </div>"""
+            desc = str(row["description"])[:72] + "..." if len(str(row["description"])) > 72 else str(row["description"])
+            rows_html += (
+                '<div class="play-row">'
+                f'<div class="play-badge" style="background:{play_color}22;border-color:{play_color}66;color:{play_color}">{row["Play"]}</div>'
+                '<div class="play-meta">'
+                f'<div class="play-desc">{desc}</div>'
+                '<div class="play-tags">'
+                f'<span class="play-tag">Q{int(row["quarter"])}</span>'
+                f'<span class="play-tag">{int(row["yards_to_go"])} yds to go</span>'
+                f'<span class="play-tag">{int(row["score_diff_offense"]):+d} score</span>'
+                f'<span class="play-tag">{row["play_result"]}</span>'
+                f'<span class="play-tag">GAME <span style="color:#7bafd4">{row["cfl_game_id"]}</span></span>'
+                f'<span class="play-tag">PLAY <span style="color:#7bafd4">{row["play_id"]}</span></span>'
+                '</div></div></div>'
+            )
 
-        st.markdown(f"""
+        st.markdown("""
 <style>
 .play-feed { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-.play-row {{ display: flex; align-items: flex-start; gap: 12px; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 10px 14px; transition: border-color 0.15s; }}
-.play-row:hover {{ border-color: {pri}44; }}
-.play-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; border: 1px solid; border-radius: 4px; padding: 3px 8px; min-width: 48px; text-align: center; margin-top: 2px; flex-shrink: 0; }}
-.play-meta {{ flex: 1; min-width: 0; }}
-.play-desc {{ font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.play-tags {{ display: flex; gap: 6px; flex-wrap: wrap; }}
-.play-tag {{ font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; background: #111827; border: 1px solid #1e2433; border-radius: 3px; padding: 2px 6px; }}
+.play-row { display: flex; align-items: flex-start; gap: 12px; background: #0d1117; border: 1px solid #1e2433; border-radius: 8px; padding: 10px 14px; transition: border-color 0.15s; }
+.play-meta { flex: 1; min-width: 0; }
+.play-desc { font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.play-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.play-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; border: 1px solid; border-radius: 4px; padding: 3px 8px; min-width: 48px; text-align: center; margin-top: 2px; flex-shrink: 0; }
+.play-tag { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; background: #111827; border: 1px solid #1e2433; border-radius: 3px; padding: 2px 6px; }
 </style>
-<div class="play-feed">{rows_html}</div>
-""", unsafe_allow_html=True)
+""" + f'<div class="play-feed">{rows_html}</div>', unsafe_allow_html=True)
 
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
@@ -543,9 +514,9 @@ tab1, = st.tabs(["TOP TENDENCIES"])
 
 with tab1:
     st.markdown(f'<div class="section-title">Top 3 outlier tendencies &mdash; {TEAM_NAMES.get(team, team)}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;">Situations where {team} deviates ≥20% from league average &middot; min. 10 team plays &middot; min. 20 league plays</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;">Situations where {team} deviates from league average &middot; min. 5 team plays &middot; min. 10 league plays</div>', unsafe_allow_html=True)
 
-    if TENDENCIES is not None:
+    if not TENDENCIES.empty and "team" in TENDENCIES.columns:
         team_tends = TENDENCIES[TENDENCIES["team"] == team].copy()
         if "abs_delta" not in team_tends.columns:
             team_tends["abs_delta"] = team_tends["delta_vs_league"].abs()
@@ -555,24 +526,22 @@ with tab1:
             st.markdown('<div class="alert-box alert-neutral">No strong tendencies found for this team.</div>', unsafe_allow_html=True)
         else:
             for _, row in team_tends.iterrows():
-                delta      = float(row["delta_vs_league"])
-                league_rate= float(row["league_pass_rate"])
-                team_rate  = float(row.get("team_hist_pass_rate", league_rate + delta))
-                is_pass    = delta > 0
-                card_color = pri if is_pass else "#ef4444"
-                tend_label = "PASS HEAVY" if is_pass else "RUN HEAVY"
-                bar_pct    = min(abs(delta) * 100 / 60, 100)
+                delta       = float(row["delta_vs_league"])
+                league_rate = float(row["league_pass_rate"])
+                team_rate   = float(row.get("team_hist_pass_rate", league_rate + delta))
+                is_pass     = delta > 0
+                card_color  = pri if is_pass else "#ef4444"
+                tend_label  = "PASS HEAVY" if is_pass else "RUN HEAVY"
+                bar_pct     = min(abs(delta) * 100 / 60, 100)
 
-                # Situation labels
-                down_str  = {1:"1st", 2:"2nd", 3:"3rd"}.get(int(row["down"]), "&mdash;")
+                down_str2 = {1:"1st", 2:"2nd", 3:"3rd"}.get(int(row["down"]), "")
                 ytg_str   = f"{int(row['yards_to_go'])} yds"
                 side_str  = f"{row['field_side']} {int(row['ball_on'])}"
                 score_str = f"{int(row['score_diff']):+d}"
                 clock_str = f"Q{int(row['quarter'])} {int(row['minutes'])}:{int(row['seconds']):02d}"
 
-                # Pull comparable plays for this scenario
-                sc_yte = yte_calc(row["field_side"], row["ball_on"])
-                sc_sec = half_seconds(int(row["quarter"]), int(row["minutes"]), int(row["seconds"]))
+                sc_yte   = yte_calc(row["field_side"], row["ball_on"])
+                sc_sec   = half_seconds(int(row["quarter"]), int(row["minutes"]), int(row["seconds"]))
                 sc_comps = get_comparables(
                     team, int(row["quarter"]), int(row["down"]),
                     float(row["yards_to_go"]), sc_yte, sc_sec,
@@ -583,86 +552,32 @@ with tab1:
                 if not sc_comps.empty:
                     for _, cr in sc_comps.iterrows():
                         cp_color = pri if cr["Play"] == "PASS" else "#475569"
-                        desc = str(cr["description"])[:65] + "…" if len(str(cr["description"])) > 65 else str(cr["description"])
-                        comp_rows_html += f"""
-                        <div class="tend-comp-row">
-                          <div class="play-badge" style="background:{cp_color}22;border-color:{cp_color}66;color:{cp_color};font-size:0.6rem;padding:2px 6px;">{cr["Play"]}</div>
-                          <div style="flex:1;min-width:0;">
-                            <div style="font-size:0.76rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{desc}</div>
-                            <div style="font-size:0.65rem;color:#4a5568;margin-top:3px;letter-spacing:0.06em;">GAME <span style="color:#7bafd4">{cr["cfl_game_id"]}</span> &nbsp;&middot;&nbsp; PLAY <span style="color:#7bafd4">{cr["play_id"]}</span></div>
-                          </div>
-                        </div>"""
+                        cdesc = str(cr["description"])[:65] + "..." if len(str(cr["description"])) > 65 else str(cr["description"])
+                        comp_rows_html += (
+                            '<div class="tend-comp-row">'
+                            f'<div class="play-badge" style="background:{cp_color}22;border-color:{cp_color}66;color:{cp_color};font-size:0.6rem;padding:2px 6px;">{cr["Play"]}</div>'
+                            '<div style="flex:1;min-width:0;">'
+                            f'<div style="font-size:0.76rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{cdesc}</div>'
+                            f'<div style="font-size:0.65rem;color:#4a5568;margin-top:3px;letter-spacing:0.06em;">GAME <span style="color:#7bafd4">{cr["cfl_game_id"]}</span> &nbsp;&middot;&nbsp; PLAY <span style="color:#7bafd4">{cr["play_id"]}</span></div>'
+                            '</div></div>'
+                        )
 
-                st.markdown("""
+                bar_pct_str = f"{bar_pct:.1f}%"
+                st.markdown(f"""
 <style>
-.tend-card {{
-    background: #0d1117;
-    border: 1px solid #1e2433;
-    border-left: 3px solid {card_color};
-    border-radius: 10px;
-    padding: 18px 20px;
-    margin-bottom: 12px;
-}}
-.tend-header {{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-}}
+.tend-card {{ background: #0d1117; border: 1px solid #1e2433; border-left: 3px solid {card_color}; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }}
+.tend-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }}
 .tend-badge {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; background: {card_color}22; border: 1px solid {card_color}66; color: #7bafd4; border-radius: 4px; padding: 3px 10px; }}
-}}
 .tend-delta {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 800; color: #7bafd4; line-height: 1; }}
-}}
-.tend-sit-grid {{
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-}}
-.tend-sit-pill {{
-    background: #111827;
-    border: 1px solid #1e2433;
-    border-radius: 5px;
-    padding: 5px 10px;
-}}
+.tend-sit-grid {{ display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }}
+.tend-sit-pill {{ background: #111827; border: 1px solid #1e2433; border-radius: 5px; padding: 5px 10px; }}
 .tend-sit-label {{ font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #7bafd4; margin-bottom: 2px; }}
 .tend-sit-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1; }}
-}}
-.tend-bar-track {{
-    height: 6px;
-    background: #1e2433;
-    border-radius: 3px;
-    margin-bottom: 6px;
-    overflow: hidden;
-}}
-.tend-bar-fill {{
-    height: 100%;
-    background: {card_color};
-    border-radius: 3px;
-    width: {bar_pct:.1f}%;
-}}
-.tend-bar-labels {{
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.68rem;
-    color: #4a5568;
-    margin-bottom: 14px;
-}}
-.tend-comps-title {{
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #4a5568;
-    margin-bottom: 8px;
-}}
-.tend-comp-row {{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    border-bottom: 1px solid #1e2433;
-}}
+.tend-bar-track {{ height: 6px; background: #1e2433; border-radius: 3px; margin-bottom: 6px; overflow: hidden; }}
+.tend-bar-fill {{ height: 100%; background: {card_color}; border-radius: 3px; width: {bar_pct_str}; }}
+.tend-bar-labels {{ display: flex; justify-content: space-between; font-size: 0.68rem; color: #4a5568; margin-bottom: 14px; }}
+.tend-comps-title {{ font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #4a5568; margin-bottom: 8px; }}
+.tend-comp-row {{ display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1e2433; }}
 .tend-comp-row:last-child {{ border-bottom: none; }}
 </style>
 <div class="tend-card">
@@ -671,7 +586,7 @@ with tab1:
     <div class="tend-delta">{delta:+.1%} vs league</div>
   </div>
   <div class="tend-sit-grid">
-    <div class="tend-sit-pill"><div class="tend-sit-label">Down</div><div class="tend-sit-value">{down_str} &amp; {ytg_str}</div></div>
+    <div class="tend-sit-pill"><div class="tend-sit-label">Down</div><div class="tend-sit-value">{down_str2} &amp; {ytg_str}</div></div>
     <div class="tend-sit-pill"><div class="tend-sit-label">Field</div><div class="tend-sit-value">{side_str}</div></div>
     <div class="tend-sit-pill"><div class="tend-sit-label">Clock</div><div class="tend-sit-value">{clock_str}</div></div>
     <div class="tend-sit-pill"><div class="tend-sit-label">Score diff</div><div class="tend-sit-value">{score_str}</div></div>
@@ -679,12 +594,10 @@ with tab1:
     <div class="tend-sit-pill"><div class="tend-sit-label">League avg</div><div class="tend-sit-value">{league_rate:.1%}</div></div>
   </div>
   <div class="tend-bar-track"><div class="tend-bar-fill"></div></div>
-  <div class="tend-bar-labels">
-    <span>0%</span><span>Deviation from league avg</span><span>60%+</span>
-  </div>
+  <div class="tend-bar-labels"><span>0%</span><span>Deviation from league avg</span><span>60%+</span></div>
   <div class="tend-comps-title">Example plays from this situation</div>
   <div>{comp_rows_html if comp_rows_html else '<div style="font-size:0.76rem;color:#4a5568;">No comparable plays found.</div>'}</div>
 </div>
 """, unsafe_allow_html=True)
     else:
-        st.info("Run `precompute_tendencies.py` and upload `cfl_top5_tendencies_precomputed.csv` to enable this tab.")
+        st.markdown('<div class="alert-box alert-neutral">No tendency data available.</div>', unsafe_allow_html=True)
