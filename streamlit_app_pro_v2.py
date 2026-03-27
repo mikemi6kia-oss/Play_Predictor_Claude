@@ -431,7 +431,7 @@ st.markdown(f"""
 # ── PROBABILITY HERO ──────────────────────────────────────────────────────────
 acc = METRICS.get("accuracy_at_0_5_threshold", 0)
 auc = METRICS.get("roc_auc", 0)
-auc_str = f"{auc:.3f}"
+auc_str = f"{auc_str}"
 n   = int(lookup["plays"]) if lookup else 0
 st.markdown(f"""
 <div class="prob-hero">
@@ -460,7 +460,7 @@ st.markdown(f"""
   </div>
   <div class="prob-card prob-card-stat">
     <div class="prob-card-label">ROC-AUC</div>
-    <div class="prob-card-value">{auc:.3f}</div>
+    <div class="prob-card-value">{auc_str}</div>
   </div>
   <div class="prob-card prob-card-stat">
     <div class="prob-card-label">Bucket sample</div>
