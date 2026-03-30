@@ -124,7 +124,7 @@ def compute_tendencies(_team_lookup):
     })
     df["team"]       = df["possession_team"]
     df["down"]       = df["down"].astype(int)
-    df["ball_on"] = df["avg_yards_to_endzone"].apply(lambda x: round(110 - x) if x > 55 else round(x))
+    df["ball_on"]    = df["avg_yards_to_endzone"].apply(lambda x: round(110 - x) if x > 55 else round(x))
     df["field_side"] = df["avg_yards_to_endzone"].apply(lambda x: "Own" if x > 55 else "Opp")
     df["score_diff"] = df["avg_score_diff"]
     df["minutes"]    = (df["avg_seconds_in_half"] % 900 // 60).astype(int).clip(0, 15)
@@ -363,7 +363,7 @@ st.markdown(f"""
 <div class="scout-header">
   <div class="scout-header-left">
     <div class="scout-wordmark">CFL Analytics</div>
-    <div class="scout-title">Play Tendency Outliers</div>
+    <div class="scout-title">Play Tendency Scout</div>
   </div>
   <div class="scout-header-right">
     <div class="team-badge">
@@ -380,8 +380,8 @@ st.markdown(f"""
 # ── LIVE BAR ──────────────────────────────────────────────────────────────────
 down_str = {1: "1st", 2: "2nd", 3: "3rd"}.get(down, f"{down}th")
 st.markdown(f"""
-<div class="Live-Bar">
-  <span class="live-tag">LIVE</span>
+<div class="live-bar">
+  <span class="live-tag">2024 Data</span>
   <div class="live-item"><div class="live-label">Situation</div><div class="live-value">{down_str} &amp; {ytg:g}</div></div>
   <div class="live-sep"></div>
   <div class="live-item"><div class="live-label">Field</div><div class="live-value">{field_side} {ball_on:g}</div></div>
@@ -471,6 +471,8 @@ with left:
             st.markdown(f'<div class="alert-box alert-run"><strong>Run-heavy tendency.</strong> {team} passes {delta:+.1%} vs league average &mdash; expect the run.</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="alert-box alert-neutral">Within &#177;20% of league average. No strong tendency signal.</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="alert-box alert-neutral">No exact bucket match for this situation.</div>', unsafe_allow_html=True)
 
 with right:
     st.markdown('<div class="section-title">Closest historical plays</div>', unsafe_allow_html=True)
@@ -581,11 +583,9 @@ with tab1:
 .tend-comp-row:last-child {{ border-bottom: none; }}
 </style>
 <div class="tend-card">
-    <div class="tend-header">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div class="tend-badge">{tend_label}</div>
-      <div class="tend-delta">{delta:+.1%} vs league</div>
-    </div>
+  <div class="tend-header">
+    <div class="tend-badge">{tend_label}</div>
+    <div class="tend-delta">{delta:+.1%} vs league</div>
   </div>
   <div class="tend-sit-grid">
     <div class="tend-sit-pill"><div class="tend-sit-label">Down</div><div class="tend-sit-value">{down_str2} &amp; {ytg_str}</div></div>
