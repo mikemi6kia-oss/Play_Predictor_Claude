@@ -256,7 +256,7 @@ html, body, .stApp {{ background-color: #0a0e1a !important; color: #e8eaf0 !impo
 .team-badge-label {{ font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: {pri}; line-height: 1; margin-top: 3px; }}
 
 .live-bar {{ background: #0d1117; border-bottom: 1px solid #1e2433; padding: 10px 28px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }}
-.live-tag {{ background: {pri}; color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; padding: 3px 8px; border-radius: 3px; }}
+.live-tag {{ background: {pri}; color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.15em; padding: 3px 8px; border-radius: 3px; }}
 .live-item {{ display: flex; flex-direction: column; gap: 1px; }}
 .live-label {{ font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; line-height: 1; }}
 .live-value {{ font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; color: #e8eaf0; line-height: 1; }}
