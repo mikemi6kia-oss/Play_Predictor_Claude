@@ -380,7 +380,7 @@ st.markdown(f"""
 # ── LIVE BAR ──────────────────────────────────────────────────────────────────
 down_str = {1: "1st", 2: "2nd", 3: "3rd"}.get(down, f"{down}th")
 st.markdown(f"""
-<div class="2024 Data">
+<div class="Live-Bar">
   <span class="live-tag">LIVE</span>
   <div class="live-item"><div class="live-label">Situation</div><div class="live-value">{down_str} &amp; {ytg:g}</div></div>
   <div class="live-sep"></div>
